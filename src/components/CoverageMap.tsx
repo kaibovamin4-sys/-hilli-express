@@ -1,0 +1,124 @@
+import { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import Section from './Section';
+import { api, aqiToPm, type Device, type Reading } from '../lib/api';
+import { isBlind, pmColor } from '../lib/air';
+
+interface CoverageMapProps { devices: Device[] }
+
+const LEGEND = [
+  { c: 'var(--good)', label: 'чисто · до 35' },
+  { c: 'var(--mid)', label: 'средне · 35–75' },
+  { c: 'var(--bad)', label: 'плохо · 75+' },
+  { c: 'rgba(248,113,113,.25)', label: 'слепая зона', dashed: true },
+  { c: '#fff', label: 'наша станция' },
+];
+
+const CITY = { lat: 43.246, lng: 76.9 };
+
+export default function CoverageMap({ devices }: CoverageMapProps) {
+  const mapEl = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const [readings, setReadings] = useState<Map<string, Reading>>(new Map());
+
+  useEffect(() => {
+    void api.latest().then((rows) => setReadings(new Map(rows.map((r) => [r.device_id, r]))));
+  }, []);
+
+  useEffect(() => {
+    if (!mapEl.current || mapRef.current) return;
+    const map = L.map(mapEl.current, { scrollWheelZoom: false }).setView([CITY.lat, CITY.lng], 11);
+    mapRef.current = map;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 18,
+    }).addTo(map);
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // Redraw markers + blind zones whenever devices/readings change.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || devices.length === 0) return;
+
+    const layers: L.Layer[] = [];
+
+    for (const d of devices) {
+      const r = readings.get(d.id);
+      const pm = r ? Math.round(aqiToPm(r.aqi_composite)) : null;
+      const color = pm != null ? pmColor(pm) : '#94a3b8';
+      const marker = L.circleMarker([d.lat, d.lng], {
+        radius: 9,
+        color,
+        weight: 2,
+        fillColor: color,
+        fillOpacity: 0.45,
+      }).addTo(map);
+      const seen = d.last_seen_at ? new Date(d.last_seen_at) : null;
+      const seenLabel = seen
+        ? `${String(seen.getHours()).padStart(2, '0')}:${String(seen.getMinutes()).padStart(2, '0')}`
+        : 'нет данных';
+      marker.bindPopup(
+        `<b>${d.name}</b>` +
+          (pm != null ? `<br>PM2.5 (оценка): <b>${pm} µg/m³</b><br>AQI-композит: <b>${Math.round(r!.aqi_composite)}</b>` : '<br>нет свежих измерений') +
+          `<br>Последний замер: ${seenLabel}`,
+      );
+      layers.push(marker);
+    }
+
+    // Blind-zone shading — grid points further than BLIND_KM from any device.
+    for (let la = 43.16; la <= 43.36; la += 0.012) {
+      for (let ln = 76.78; ln <= 77.02; ln += 0.016) {
+        if (isBlind({ lat: la, lng: ln }, devices)) {
+          const c = L.circle([la, ln], {
+            radius: 700,
+            color: 'transparent',
+            fillColor: '#f87171',
+            fillOpacity: 0.06,
+            interactive: false,
+          }).addTo(map);
+          layers.push(c);
+        }
+      }
+    }
+
+    return () => {
+      for (const l of layers) map.removeLayer(l);
+    };
+  }, [devices, readings]);
+
+  return (
+    <Section
+      id="map-sec"
+      eyebrow="Экран 2 · Покрытие"
+      title="Карта постов и слепые зоны"
+      sub="Точки — сеть наших датчиков (MQ2/MQ4/MQ8). Заштрихованные области — районы, где до ближайшего поста дальше 3,5 км: там официальных измерений фактически нет."
+    >
+      <div className="liquid-glass rounded-2xl p-2.5">
+        <div ref={mapEl} className="h-[480px] rounded-[14px] z-[1]" />
+      </div>
+
+      <div className="flex flex-wrap gap-2.5 mt-4">
+        {LEGEND.map((l) => (
+          <span
+            key={l.label}
+            className="inline-flex items-center gap-2 text-[13px] text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03]"
+          >
+            <span
+              className="w-[11px] h-[11px] rounded-full"
+              style={{
+                background: l.c,
+                border: l.dashed ? '1px dashed var(--bad)' : undefined,
+              }}
+            />
+            {l.label}
+          </span>
+        ))}
+      </div>
+    </Section>
+  );
+}

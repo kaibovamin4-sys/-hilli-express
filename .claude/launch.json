@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "aua-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173,
+      "cwd": "C:/Users/gnino/AppData/Local/Temp/claude/C--Users-gnino/6102aef0-cb48-40b8-bfc1-f5da09f20f23/scratchpad/hilli/aua-almaty"
+    }
+  ]
+}
