@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import AnimatedStatus from './AnimatedStatus';
 import { api, asKey, aqiToPm, type District, type FullStatus, type Reading } from '../lib/api';
 import { distanceKm, statusCopyFor } from '../lib/air';
+import { findDistrictId, type DistrictGeoJSON } from '../lib/geo';
 
 interface HeroProps {
   districts: District[];
   district: District | null;
   status: FullStatus | null;
+  districtGeo: DistrictGeoJSON | null;
   onDistrictChange: (d: District) => void;
 }
 
@@ -40,7 +42,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-export default function Hero({ districts, district, status, onDistrictChange }: HeroProps) {
+export default function Hero({ districts, district, status, districtGeo, onDistrictChange }: HeroProps) {
   const [geoLabel, setGeoLabel] = useState('Определить район');
   const [spark, setSpark] = useState<number[]>([]);
   const deepRef = useRef<HTMLDetailsElement>(null);
@@ -67,13 +69,27 @@ export default function Hero({ districts, district, status, onDistrictChange }: 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+
+        // Real district polygon containment first — accurate near borders,
+        // unlike matching the closest of a handful of district center points.
+        const matchedId = districtGeo ? findDistrictId(p.lat, p.lng, districtGeo) : null;
+        const byPolygon = matchedId ? districts.find((d) => d.id === matchedId) : undefined;
+
+        if (byPolygon) {
+          setGeoLabel('Район определён');
+          onDistrictChange(byPolygon);
+          return;
+        }
+
+        // Fallback (point outside every polygon, or boundaries not loaded yet):
+        // nearest district center, so the button still does something useful.
         let best = districts[0]!;
         let bd = Infinity;
         for (const d of districts) {
           const dd = distanceKm(p, d);
           if (dd < bd) { bd = dd; best = d; }
         }
-        setGeoLabel('Район определён');
+        setGeoLabel('Район определён (приблизительно)');
         onDistrictChange(best);
       },
       () => setGeoLabel('Не удалось — выберите вручную'),

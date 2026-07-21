@@ -14,13 +14,20 @@ export const DEMO_DEVICES = [
   { id: 'aua-auezov-1', name: 'Ауэзов-1', lat: 43.238, lng: 76.855, district: 'Ауэзов (жилой)' },
 ];
 
+// District centers are the area-weighted centroid of each district's official
+// boundary polygon (see frontend /public/almaty-districts.geojson, sourced from
+// OSM administrative boundary relations) — not eyeballed coordinates. Used as
+// the reference point for /api/compare-districts and as dropdown/geolocation
+// targets on the frontend.
 export const DEMO_DISTRICTS: DistrictRow[] = [
-  { id: 'medeu', name: 'Медеу', lat: 43.161, lng: 77.058 },
-  { id: 'almaly', name: 'Алмалы', lat: 43.256, lng: 76.929 },
-  { id: 'alatau', name: 'Алатау', lat: 43.216, lng: 76.844 },
-  { id: 'turksib', name: 'Турксиб', lat: 43.339, lng: 76.985 },
-  { id: 'bostandyk', name: 'Бостандык', lat: 43.222, lng: 76.919 },
-  { id: 'auezov', name: 'Ауэзов', lat: 43.238, lng: 76.855 },
+  { id: 'alatau', name: 'Алатауский', lat: 43.298736, lng: 76.834789 },
+  { id: 'almaly', name: 'Алмалинский', lat: 43.252231, lng: 76.908795 },
+  { id: 'auezov', name: 'Ауэзовский', lat: 43.223746, lng: 76.8505 },
+  { id: 'bostandyk', name: 'Бостандыкский', lat: 43.155728, lng: 76.923471 },
+  { id: 'medeu', name: 'Медеуский', lat: 43.159875, lng: 77.018629 },
+  { id: 'nauryzbay', name: 'Наурызбайский', lat: 43.174418, lng: 76.830941 },
+  { id: 'turksib', name: 'Турксибский', lat: 43.340927, lng: 76.985681 },
+  { id: 'zhetysu', name: 'Жетысуский', lat: 43.308927, lng: 76.924772 },
 ];
 
 export function seedDevicesAndDistricts(): void {

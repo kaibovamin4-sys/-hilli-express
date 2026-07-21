@@ -12,6 +12,7 @@ import AdviceSection from './components/AdviceSection';
 import AboutSection, { Footer } from './components/AboutSection';
 import { api, asKey, type District, type Device, type FullStatus } from './lib/api';
 import { statusCopyFor } from './lib/air';
+import { loadDistrictBoundaries, type DistrictGeoJSON } from './lib/geo';
 
 const HERO_VIDEO_URL =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4';
@@ -21,6 +22,7 @@ export default function App() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [district, setDistrict] = useState<District | null>(null);
   const [status, setStatus] = useState<FullStatus | null>(null);
+  const [districtGeo, setDistrictGeo] = useState<DistrictGeoJSON | null>(null);
 
   useEffect(() => {
     void Promise.all([api.districts(), api.devices()]).then(([d, dv]) => {
@@ -28,6 +30,7 @@ export default function App() {
       setDevices(dv);
       if (d[0]) setDistrict(d[0]);
     });
+    void loadDistrictBoundaries().then(setDistrictGeo);
   }, []);
 
   useEffect(() => {
@@ -67,9 +70,10 @@ export default function App() {
           districts={districts}
           district={district}
           status={status}
+          districtGeo={districtGeo}
           onDistrictChange={setDistrict}
         />
-        <CoverageMap devices={devices} />
+        <CoverageMap devices={devices} districtGeo={districtGeo} />
         <GapSection devices={devices} />
         <BriefingSection district={district} status={status} />
         <WalkSpotsSection district={district} />
