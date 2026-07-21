@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node --env-file=.env dist/server.js",
+    "start": "node dist/server.js",
     "seed": "tsx --env-file=.env src/mock/seed.ts"
   },
   "engines": {
-    "node": ">=22.5"
+    ">=22.5.0 <23.0.0"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
