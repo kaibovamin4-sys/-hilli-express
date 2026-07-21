@@ -86,19 +86,27 @@ export interface TrafficInfo {
   model_note: string;
 }
 
-export function congestionAt(p: Point, at: Date = new Date()): TrafficInfo {
+function timeFactor(at: Date): { tf: number; weekend: boolean } {
   const hour = at.getHours() + at.getMinutes() / 60;
   const day = at.getDay();
   const weekend = day === 0 || day === 6;
   const tf = diurnal(hour, weekend) * fridayFactor(day);
+  return { tf, weekend };
+}
+
+export function corridorLoad(c: Corridor, at: Date = new Date()): number {
+  const live = liveLoadFor(c.id);
+  if (live != null) return live;
+  return c.base * timeFactor(at).tf;
+}
+
+export function congestionAt(p: Point, at: Date = new Date()): TrafficInfo {
+  const { tf, weekend } = timeFactor(at);
   const live = hasLiveTraffic();
 
   // Per-corridor load on a 0..1 scale. Live TomTom reading wins when fresh;
   // otherwise the synthetic base × time-of-day factor.
-  const loadOf = (c: Corridor): number => {
-    const l = liveLoadFor(c.id);
-    return l != null ? l : c.base * tf;
-  };
+  const loadOf = (c: Corridor): number => corridorLoad(c, at);
 
   let best: { c: Corridor; d: number } | null = null;
   let cityLoadSum = 0;

@@ -13,6 +13,7 @@
 
 import { config } from '../config.js';
 import { CORRIDORS, type Corridor } from './traffic.js';
+import { cached } from './cache.js';
 
 interface LiveLoad {
   load: number; // 0..1, live congestion for this corridor
@@ -21,6 +22,7 @@ interface LiveLoad {
 
 const liveLoads = new Map<string, LiveLoad>();
 let started = false;
+const TRAFFIC_TILE_TTL_MS = 45_000;
 
 export function hasLiveTraffic(): boolean {
   return config.tomtomKey !== '' && liveLoads.size > 0;
@@ -33,6 +35,23 @@ export function liveLoadFor(corridorId: string): number | null {
   // Treat readings older than 3 refresh cycles as stale.
   if (Date.now() - hit.at > config.trafficRefreshMs * 3) return null;
   return hit.load;
+}
+
+export function hasTrafficTiles(): boolean {
+  return config.tomtomKey !== '';
+}
+
+export async function fetchTrafficFlowTile(z: number, x: number, y: number): Promise<Buffer | null> {
+  if (!hasTrafficTiles()) return null;
+  const key = `tomtom:traffic-tile:${z}:${x}:${y}`;
+  return cached(key, TRAFFIC_TILE_TTL_MS, async () => {
+    const url =
+      'https://api.tomtom.com/traffic/map/4/tile/flow/relative0-dark' +
+      `/${z}/${x}/${y}.png?key=${encodeURIComponent(config.tomtomKey)}&tileSize=256`;
+    const res = await fetch(url, { headers: { accept: 'image/png' } });
+    if (!res.ok) throw new Error(`TomTom traffic tile ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  });
 }
 
 // Sample point for a corridor: its middle anchor, most representative of the road.

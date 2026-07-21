@@ -2,7 +2,7 @@
 // and error handling. Backend types intentionally mirror src/types.ts on the
 // server so response objects need no reshaping in components.
 
-const BASE =
+export const API_BASE_URL =
   (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL ??
   'http://localhost:8080';
 
@@ -159,6 +159,7 @@ export interface TrafficCorridor {
   id: string;
   name: string;
   path: Point[];
+  load: number; // 0..1 effective congestion: live TomTom when fresh, otherwise model
   live_load: number | null; // 0..1 live congestion, or null if no live reading
 }
 
@@ -168,11 +169,12 @@ export interface TrafficResponse {
   city_average: number;
   is_rush_hour: boolean;
   model_note: string;
+  traffic_tiles_enabled: boolean;
   corridors: TrafficCorridor[];
 }
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${API_BASE_URL}${path}`);
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -199,7 +201,7 @@ export const api = {
   checkAddress: (q: string, profile: Profile = 'default') =>
     get<AddressCheck>(`/api/check-address?q=${encodeURIComponent(q)}&profile=${profile}`),
   chat: (message: string, p: Point, profile: Profile = 'default') =>
-    fetch(`${BASE}/api/chat`, {
+    fetch(`${API_BASE_URL}/api/chat`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ message, lat: p.lat, lng: p.lng, profile }),

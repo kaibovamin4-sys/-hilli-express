@@ -2,8 +2,8 @@
 
 import type { FastifyPluginAsync } from 'fastify';
 import { config } from '../config.js';
-import { congestionAt, CORRIDORS } from '../external/traffic.js';
-import { liveLoadFor } from '../external/tomtom.js';
+import { congestionAt, CORRIDORS, corridorLoad } from '../external/traffic.js';
+import { fetchTrafficFlowTile, hasTrafficTiles, liveLoadFor } from '../external/tomtom.js';
 import { constructionImpact, SITES } from '../external/construction.js';
 import { optimizePlacement } from '../analytics/placement.js';
 import { fuseAt, stationAnomalies, LENGTH_SCALE_KM } from '../processing/fusion.js';
@@ -11,6 +11,32 @@ import { getAirQuality } from '../external/openMeteo.js';
 import { listDevices } from '../db/repositories.js';
 
 export const cityRoutes: FastifyPluginAsync = async (app) => {
+  app.get('/api/traffic/tile/:z/:x/:y', {
+    schema: {
+      params: {
+        type: 'object',
+        required: ['z', 'x', 'y'],
+        properties: {
+          z: { type: 'integer', minimum: 0, maximum: 22 },
+          x: { type: 'integer', minimum: 0 },
+          y: { type: 'integer', minimum: 0 },
+        },
+      },
+    },
+  }, async (req, reply) => {
+    const p = req.params as { z: number; x: number; y: number };
+    const maxTile = 2 ** p.z;
+    if (p.x >= maxTile || p.y >= maxTile) return reply.code(404).send({ error: 'tile_out_of_range' });
+
+    const tile = await fetchTrafficFlowTile(p.z, p.x, p.y);
+    if (!tile) return reply.code(204).send();
+
+    return reply
+      .header('content-type', 'image/png')
+      .header('cache-control', 'public, max-age=30')
+      .send(tile);
+  });
+
   app.get('/api/traffic', {
     schema: {
       querystring: {
@@ -23,10 +49,12 @@ export const cityRoutes: FastifyPluginAsync = async (app) => {
     const info = congestionAt({ lat: q.lat ?? config.cityLat, lng: q.lng ?? config.cityLng });
     return {
       ...info,
+      traffic_tiles_enabled: hasTrafficTiles(),
       corridors: CORRIDORS.map((c) => ({
         id: c.id,
         name: c.name,
         path: c.path,
+        load: Math.round(corridorLoad(c) * 100) / 100,
         // 0..1 live load if we have a fresh TomTom reading, else null.
         live_load: liveLoadFor(c.id),
       })),

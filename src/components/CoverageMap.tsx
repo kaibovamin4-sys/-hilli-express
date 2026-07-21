@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Section from './Section';
-import { api, aqiToPm, type Device, type Reading, type TrafficCorridor } from '../lib/api';
+import { API_BASE_URL, api, aqiToPm, type Device, type Reading, type TrafficCorridor } from '../lib/api';
 import { isBlind, pmColor } from '../lib/air';
 import { findDistrictId, type DistrictGeoJSON } from '../lib/geo';
 
@@ -36,6 +36,7 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
   const [corridors, setCorridors] = useState<TrafficCorridor[]>([]);
   const [showTraffic, setShowTraffic] = useState(true);
   const [liveTraffic, setLiveTraffic] = useState(false);
+  const [trafficTilesEnabled, setTrafficTilesEnabled] = useState(false);
 
   useEffect(() => {
     void api.latest().then((rows) => setReadings(new Map(rows.map((r) => [r.device_id, r]))));
@@ -49,6 +50,7 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
         if (!alive) return;
         setCorridors(t.corridors);
         setLiveTraffic(t.corridors.some((c) => c.live_load != null));
+        setTrafficTilesEnabled(t.traffic_tiles_enabled);
       });
     load();
     const id = setInterval(load, 120_000);
@@ -130,15 +132,32 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
     };
   }, [districtGeo, devices, readings]);
 
-  // Traffic corridors as coloured polylines. Live TomTom load if available,
-  // else the corridor's modelled load for the current time.
+  // Citywide TomTom traffic flow tiles. The key stays server-side: Leaflet only
+  // receives proxied transparent PNG tiles from our backend.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !showTraffic || corridors.length === 0) return;
+    if (!map || !showTraffic || !trafficTilesEnabled) return;
+
+    const layer = L.tileLayer(`${API_BASE_URL}/api/traffic/tile/{z}/{x}/{y}`, {
+      attribution: '&copy; TomTom traffic',
+      opacity: 0.82,
+      maxZoom: 18,
+      pane: 'overlayPane',
+    }).addTo(map);
+
+    return () => {
+      map.removeLayer(layer);
+    };
+  }, [showTraffic, trafficTilesEnabled]);
+
+  // Fallback: modelled corridor lines when TomTom tile coverage is not enabled.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !showTraffic || trafficTilesEnabled || corridors.length === 0) return;
 
     const layers: L.Layer[] = [];
     for (const c of corridors) {
-      const load = c.live_load ?? 0.3;
+      const load = c.live_load ?? c.load;
       const latlngs = c.path.map((p) => [p.lat, p.lng] as [number, number]);
       const line = L.polyline(latlngs, {
         color: trafficColor(load),
@@ -158,7 +177,7 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
     return () => {
       for (const l of layers) map.removeLayer(l);
     };
-  }, [corridors, showTraffic]);
+  }, [corridors, showTraffic, trafficTilesEnabled]);
 
   // Redraw markers + blind zones whenever devices/readings change.
   useEffect(() => {
@@ -221,7 +240,9 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
       <div className="liquid-glass rounded-2xl p-2.5">
         <div className="flex items-center justify-between px-1.5 pb-2.5">
           <span className="text-[13px] text-gray-400">
-            {liveTraffic ? 'Пробки: live · TomTom' : 'Пробки: модель Алматы'}
+            {trafficTilesEnabled
+              ? 'Пробки: весь город · TomTom'
+              : liveTraffic ? 'Пробки: live · TomTom' : 'Пробки: модель Алматы'}
           </span>
           <button
             onClick={() => setShowTraffic((v) => !v)}
