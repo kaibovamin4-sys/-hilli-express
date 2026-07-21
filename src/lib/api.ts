@@ -155,6 +155,17 @@ export interface AnomalyEvent {
   severity: number;
 }
 
+export interface Mq135AirReading {
+  id: number;
+  ts: string;
+  topic: string;
+  location: string;
+  raw_adc: number;
+  voltage: number;
+  quality_percent: number;
+  status: string;
+}
+
 export interface TrafficCorridor {
   id: string;
   name: string;
@@ -185,6 +196,7 @@ export const api = {
   districts: () => get<{ districts: District[] }>('/api/districts').then((r) => r.districts),
   devices: () => get<{ devices: Device[] }>('/api/devices').then((r) => r.devices),
   latest: () => get<{ readings: Reading[] }>('/api/readings/latest').then((r) => r.readings),
+  air: (limit = 1) => get<{ latest: Mq135AirReading | null; readings: Mq135AirReading[] }>(`/api/air?limit=${limit}`),
   traffic: () => get<TrafficResponse>('/api/traffic'),
   history: (deviceId: string, hours = 24) =>
     get<{ readings: Reading[] }>(

@@ -49,6 +49,18 @@ CREATE TABLE IF NOT EXISTS readings_processed (
 );
 CREATE INDEX IF NOT EXISTS idx_proc_ts ON readings_processed(ts);
 
+CREATE TABLE IF NOT EXISTS mq135_air_readings (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts              TEXT NOT NULL,
+  topic           TEXT NOT NULL,
+  location        TEXT NOT NULL,
+  raw_adc         INTEGER NOT NULL CHECK (raw_adc BETWEEN 0 AND 1023),
+  voltage         REAL NOT NULL CHECK (voltage >= 0 AND voltage <= 5),
+  quality_percent REAL NOT NULL CHECK (quality_percent >= 0 AND quality_percent <= 100),
+  status          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_mq135_air_ts ON mq135_air_readings(ts);
+
 CREATE TABLE IF NOT EXISTS anomalies (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   device_id  TEXT NOT NULL REFERENCES devices(id) ON DELETE CASCADE,

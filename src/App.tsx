@@ -4,6 +4,7 @@ import Hero from './components/Hero';
 import CoverageMap from './components/CoverageMap';
 import GapSection from './components/GapSection';
 import BriefingSection from './components/BriefingSection';
+import AirSensorSection from './components/AirSensorSection';
 import WalkSpotsSection from './components/WalkSpotsSection';
 import ImpactSection from './components/ImpactSection';
 import JoinSection from './components/JoinSection';
@@ -76,6 +77,7 @@ export default function App() {
         <CoverageMap devices={devices} districtGeo={districtGeo} />
         <GapSection devices={devices} />
         <BriefingSection district={district} status={status} />
+        <AirSensorSection />
         <WalkSpotsSection district={district} />
         <AdviceSection current={copy.key} />
         <ImpactSection />

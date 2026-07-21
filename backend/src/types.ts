@@ -43,6 +43,17 @@ export interface ProcessedReading {
   quality_flag: QualityFlag;
 }
 
+export interface Mq135AirReading {
+  id?: number;
+  ts: string;
+  topic: string;
+  location: string;
+  raw_adc: number;
+  voltage: number;
+  quality_percent: number;
+  status: string;
+}
+
 export interface AnomalyEvent {
   id?: number;
   device_id: string;

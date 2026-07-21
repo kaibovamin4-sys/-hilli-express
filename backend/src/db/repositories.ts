@@ -5,7 +5,7 @@
 // run/get/all. `null` maps to SQL NULL. Booleans are not supported, so the
 // `active` flag is stored as INTEGER 0/1 (see bool01 in client.ts).
 
-import type { Device, RawReading, ProcessedReading, AnomalyEvent } from '../types.js';
+import type { Device, RawReading, ProcessedReading, Mq135AirReading, AnomalyEvent } from '../types.js';
 import { getDb, bool01 } from './client.js';
 
 // Devices
@@ -160,6 +160,34 @@ export function processedRange(deviceId: string, fromIso: string, toIso: string)
       'SELECT * FROM readings_processed WHERE device_id = ? AND ts BETWEEN ? AND ? ORDER BY ts',
     )
     .all(deviceId, fromIso, toIso) as unknown as ProcessedReading[];
+}
+
+// MQ-135 air readings from MQTT
+
+export function insertMq135AirReading(r: Mq135AirReading): number {
+  const info = getDb()
+    .prepare(
+      `INSERT INTO mq135_air_readings
+        (ts, topic, location, raw_adc, voltage, quality_percent, status)
+       VALUES
+        (:ts, :topic, :location, :raw_adc, :voltage, :quality_percent, :status)`,
+    )
+    .run({
+      ts: r.ts,
+      topic: r.topic,
+      location: r.location,
+      raw_adc: r.raw_adc,
+      voltage: r.voltage,
+      quality_percent: r.quality_percent,
+      status: r.status,
+    });
+  return Number(info.lastInsertRowid);
+}
+
+export function latestMq135AirReadings(limit = 1): Mq135AirReading[] {
+  return getDb()
+    .prepare('SELECT * FROM mq135_air_readings ORDER BY ts DESC, id DESC LIMIT ?')
+    .all(Math.max(1, Math.min(100, limit))) as unknown as Mq135AirReading[];
 }
 
 // Anomalies

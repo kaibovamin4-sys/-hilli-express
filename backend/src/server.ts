@@ -14,6 +14,7 @@ import { startMockLoop } from './mock/generator.js';
 import { startTrafficPoller } from './external/tomtom.js';
 import { loadSecretsFromEnv } from './auth/hmac.js';
 import { scanAllDevices } from './services/anomalyScan.js';
+import { startMq135MqttSubscriber, stopMq135MqttSubscriber } from './services/mq135Mqtt.js';
 
 import { statusRoutes } from './routes/status.js';
 import { ingestRoutes } from './routes/ingest.js';
@@ -29,6 +30,7 @@ import { analyticsRoutes } from './routes/analytics.js';
 import { cityRoutes } from './routes/city.js';
 import { chatRoutes } from './routes/chat.js';
 import { placesRoutes } from './routes/places.js';
+import { airRoutes } from './routes/air.js';
 
 const ANOMALY_SCAN_INTERVAL_MS = 5 * 60_000;
 const ANOMALY_SCAN_WINDOW_H = 3;
@@ -69,6 +71,7 @@ async function bootstrap(): Promise<void> {
     statusRoutes, ingestRoutes, readingsRoutes, deviceRoutes, coverageRoutes,
     forecastRoutes, anomaliesRoutes, recommendationsRoutes, compareRoutes,
     analyticsRoutes, cityRoutes, chatRoutes, placesRoutes,
+    airRoutes,
   ]) {
     await app.register(routes);
   }
@@ -78,6 +81,7 @@ async function bootstrap(): Promise<void> {
   console.log(`AUA backend on http://${config.host}:${config.port}`);
 
   startTrafficPoller(app.log);
+  startMq135MqttSubscriber(app.log);
 
   if (config.useMock) {
     startMockLoop(config.mockIntervalMs);
@@ -95,6 +99,7 @@ async function bootstrap(): Promise<void> {
 
   const shutdown = async () => {
     clearInterval(scanInterval);
+    await stopMq135MqttSubscriber();
     await app.close();
     closeDb();
     process.exit(0);

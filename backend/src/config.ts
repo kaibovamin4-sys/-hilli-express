@@ -33,6 +33,10 @@ export const config = {
   cityName: env('CITY_NAME', 'Almaty'),
   corsOrigin: env('CORS_ORIGIN', 'http://localhost:5173'),
   logLevel: env('LOG_LEVEL', 'info'),
+  mqttEnabled: bool('MQTT_ENABLED', true),
+  mqttBrokerUrl: env('MQTT_BROKER_URL', 'mqtt://broker.hivemq.com:1883'),
+  mqttClientId: env('MQTT_CLIENT_ID', 'aua-backend-mq135'),
+  mq135Topic: env('MQ135_TOPIC', 'almaty/auezov/mkr12/station1/air'),
   // TomTom Traffic Flow. When TOMTOM_KEY is set the traffic layer uses live
   // road speeds; otherwise it falls back to the synthetic weekly model.
   tomtomKey: process.env.TOMTOM_KEY ?? '',
