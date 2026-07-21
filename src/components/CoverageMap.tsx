@@ -2,11 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Section from './Section';
-import { api, aqiToPm, type Device, type Reading } from '../lib/api';
+import { api, aqiToPm, type Device, type Reading, type TrafficCorridor } from '../lib/api';
 import { isBlind, pmColor } from '../lib/air';
 import { findDistrictId, type DistrictGeoJSON } from '../lib/geo';
 
 interface CoverageMapProps { devices: Device[]; districtGeo: DistrictGeoJSON | null }
+
+// Traffic load 0..1 → colour. Green flowing, amber slowing, red jammed.
+function trafficColor(load: number): string {
+  if (load >= 0.6) return '#ef4444';
+  if (load >= 0.35) return '#f59e0b';
+  if (load >= 0.15) return '#eab308';
+  return '#22c55e';
+}
 
 const LEGEND = [
   { c: 'var(--good)', label: 'чисто · до 35' },
@@ -15,6 +23,8 @@ const LEGEND = [
   { c: 'rgba(248,113,113,.25)', label: 'слепая зона', dashed: true },
   { c: '#fff', label: 'наша станция' },
   { c: 'rgba(71,85,105,.3)', label: 'граница района без своей станции', dashed: true },
+  { c: '#22c55e', label: 'дорога свободна' },
+  { c: '#ef4444', label: 'пробка' },
 ];
 
 const CITY = { lat: 43.246, lng: 76.9 };
@@ -23,9 +33,29 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const [readings, setReadings] = useState<Map<string, Reading>>(new Map());
+  const [corridors, setCorridors] = useState<TrafficCorridor[]>([]);
+  const [showTraffic, setShowTraffic] = useState(true);
+  const [liveTraffic, setLiveTraffic] = useState(false);
 
   useEffect(() => {
     void api.latest().then((rows) => setReadings(new Map(rows.map((r) => [r.device_id, r]))));
+  }, []);
+
+  // Poll traffic every 2 min so the corridor colours stay current.
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      void api.traffic().then((t) => {
+        if (!alive) return;
+        setCorridors(t.corridors);
+        setLiveTraffic(t.corridors.some((c) => c.live_load != null));
+      });
+    load();
+    const id = setInterval(load, 120_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
   }, []);
 
   useEffect(() => {
@@ -100,6 +130,36 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
     };
   }, [districtGeo, devices, readings]);
 
+  // Traffic corridors as coloured polylines. Live TomTom load if available,
+  // else the corridor's modelled load for the current time.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !showTraffic || corridors.length === 0) return;
+
+    const layers: L.Layer[] = [];
+    for (const c of corridors) {
+      const load = c.live_load ?? 0.3;
+      const latlngs = c.path.map((p) => [p.lat, p.lng] as [number, number]);
+      const line = L.polyline(latlngs, {
+        color: trafficColor(load),
+        weight: 5,
+        opacity: 0.8,
+        lineCap: 'round',
+      }).addTo(map);
+      const pct = Math.round(load * 100);
+      line.bindPopup(
+        `<b>${c.name}</b><br>` +
+          (c.live_load != null
+            ? `Загруженность (live): <b>${pct}%</b>`
+            : `Загруженность (модель): <b>${pct}%</b>`),
+      );
+      layers.push(line);
+    }
+    return () => {
+      for (const l of layers) map.removeLayer(l);
+    };
+  }, [corridors, showTraffic]);
+
   // Redraw markers + blind zones whenever devices/readings change.
   useEffect(() => {
     const map = mapRef.current;
@@ -159,6 +219,17 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
       sub="Точки — сеть наших датчиков (MQ2/MQ4/MQ8). Контуры — официальные границы районов Алматы, закрашены по среднему PM2.5 датчиков внутри. Заштрихованные области — районы, где до ближайшего поста дальше 3,5 км: там официальных измерений фактически нет."
     >
       <div className="liquid-glass rounded-2xl p-2.5">
+        <div className="flex items-center justify-between px-1.5 pb-2.5">
+          <span className="text-[13px] text-gray-400">
+            {liveTraffic ? 'Пробки: live · TomTom' : 'Пробки: модель Алматы'}
+          </span>
+          <button
+            onClick={() => setShowTraffic((v) => !v)}
+            className="text-[13px] text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
+          >
+            {showTraffic ? 'Скрыть пробки' : 'Показать пробки'}
+          </button>
+        </div>
         <div ref={mapEl} className="h-[480px] rounded-[14px] z-[1]" />
       </div>
 

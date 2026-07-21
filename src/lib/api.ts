@@ -155,6 +155,22 @@ export interface AnomalyEvent {
   severity: number;
 }
 
+export interface TrafficCorridor {
+  id: string;
+  name: string;
+  path: Point[];
+  live_load: number | null; // 0..1 live congestion, or null if no live reading
+}
+
+export interface TrafficResponse {
+  index: number;
+  level: 'free' | 'moderate' | 'heavy' | 'jam';
+  city_average: number;
+  is_rush_hour: boolean;
+  model_note: string;
+  corridors: TrafficCorridor[];
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
@@ -167,6 +183,7 @@ export const api = {
   districts: () => get<{ districts: District[] }>('/api/districts').then((r) => r.districts),
   devices: () => get<{ devices: Device[] }>('/api/devices').then((r) => r.devices),
   latest: () => get<{ readings: Reading[] }>('/api/readings/latest').then((r) => r.readings),
+  traffic: () => get<TrafficResponse>('/api/traffic'),
   history: (deviceId: string, hours = 24) =>
     get<{ readings: Reading[] }>(
       `/api/readings/history?device_id=${deviceId}&from=${hoursAgo(hours)}&to=${new Date().toISOString()}`,

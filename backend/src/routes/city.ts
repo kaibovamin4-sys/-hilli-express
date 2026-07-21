@@ -3,6 +3,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { config } from '../config.js';
 import { congestionAt, CORRIDORS } from '../external/traffic.js';
+import { liveLoadFor } from '../external/tomtom.js';
 import { constructionImpact, SITES } from '../external/construction.js';
 import { optimizePlacement } from '../analytics/placement.js';
 import { fuseAt, stationAnomalies, LENGTH_SCALE_KM } from '../processing/fusion.js';
@@ -20,7 +21,16 @@ export const cityRoutes: FastifyPluginAsync = async (app) => {
   }, async (req) => {
     const q = req.query as { lat?: number; lng?: number };
     const info = congestionAt({ lat: q.lat ?? config.cityLat, lng: q.lng ?? config.cityLng });
-    return { ...info, corridors: CORRIDORS.map((c) => ({ id: c.id, name: c.name, path: c.path })) };
+    return {
+      ...info,
+      corridors: CORRIDORS.map((c) => ({
+        id: c.id,
+        name: c.name,
+        path: c.path,
+        // 0..1 live load if we have a fresh TomTom reading, else null.
+        live_load: liveLoadFor(c.id),
+      })),
+    };
   });
 
   app.get('/api/construction', {

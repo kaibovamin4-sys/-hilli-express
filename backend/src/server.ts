@@ -11,6 +11,7 @@ import { getDb, closeDb } from './db/client.js';
 import { listDevices, listDistricts } from './db/repositories.js';
 import { seedIfEmpty } from './db/seedData.js';
 import { startMockLoop } from './mock/generator.js';
+import { startTrafficPoller } from './external/tomtom.js';
 import { loadSecretsFromEnv } from './auth/hmac.js';
 import { scanAllDevices } from './services/anomalyScan.js';
 
@@ -75,6 +76,8 @@ async function bootstrap(): Promise<void> {
 
   await app.listen({ host: config.host, port: config.port });
   console.log(`AUA backend on http://${config.host}:${config.port}`);
+
+  startTrafficPoller(app.log);
 
   if (config.useMock) {
     startMockLoop(config.mockIntervalMs);

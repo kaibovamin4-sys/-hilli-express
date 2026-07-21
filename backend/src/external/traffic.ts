@@ -9,6 +9,7 @@
 
 import type { Point } from '../types.js';
 import { distanceKm } from '../processing/idw.js';
+import { liveLoadFor, hasLiveTraffic } from './tomtom.js';
 
 export interface Corridor {
   id: string;
@@ -90,11 +91,19 @@ export function congestionAt(p: Point, at: Date = new Date()): TrafficInfo {
   const day = at.getDay();
   const weekend = day === 0 || day === 6;
   const tf = diurnal(hour, weekend) * fridayFactor(day);
+  const live = hasLiveTraffic();
+
+  // Per-corridor load on a 0..1 scale. Live TomTom reading wins when fresh;
+  // otherwise the synthetic base × time-of-day factor.
+  const loadOf = (c: Corridor): number => {
+    const l = liveLoadFor(c.id);
+    return l != null ? l : c.base * tf;
+  };
 
   let best: { c: Corridor; d: number } | null = null;
   let cityLoadSum = 0;
   for (const c of CORRIDORS) {
-    cityLoadSum += c.base * tf;
+    cityLoadSum += loadOf(c);
     const d = corridorDistanceKm(p, c);
     if (!best || d < best.d) best = { c, d };
   }
@@ -103,7 +112,7 @@ export function congestionAt(p: Point, at: Date = new Date()): TrafficInfo {
   let index = 0;
   let nearest: TrafficInfo['nearest_corridor'] = null;
   if (best) {
-    const load = best.c.base * tf * 10;
+    const load = loadOf(best.c) * 10;
     // Congestion effect decays: full within 0.3 km of a corridor, ~0 past 2 km.
     const decay = Math.exp(-Math.max(0, best.d - 0.3) / 0.7);
     index = load * decay;
@@ -124,7 +133,8 @@ export function congestionAt(p: Point, at: Date = new Date()): TrafficInfo {
     nearest_corridor: nearest,
     city_average: Math.round(cityAvg * 10) / 10,
     is_rush_hour: !weekend && tf > 0.55,
-    model_note:
-      'Модельная оценка по типовому недельному профилю Алматы, не live-данные. Интерфейс готов к подключению провайдера (TomTom/2GIS).',
+    model_note: live
+      ? 'Live-данные TomTom Traffic Flow по ключевым магистралям Алматы.'
+      : 'Модельная оценка по типовому недельному профилю Алматы, не live-данные. Интерфейс готов к подключению провайдера (TomTom/2GIS).',
   };
 }

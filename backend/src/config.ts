@@ -33,6 +33,10 @@ export const config = {
   cityName: env('CITY_NAME', 'Almaty'),
   corsOrigin: env('CORS_ORIGIN', 'http://localhost:5173'),
   logLevel: env('LOG_LEVEL', 'info'),
+  // TomTom Traffic Flow. When TOMTOM_KEY is set the traffic layer uses live
+  // road speeds; otherwise it falls back to the synthetic weekly model.
+  tomtomKey: process.env.TOMTOM_KEY ?? '',
+  trafficRefreshMs: num('TRAFFIC_REFRESH_MS', 120_000),
 };
 
 export type AppConfig = typeof config;
