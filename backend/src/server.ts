@@ -26,6 +26,7 @@ import { compareRoutes } from './routes/compare.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { cityRoutes } from './routes/city.js';
 import { chatRoutes } from './routes/chat.js';
+import { placesRoutes } from './routes/places.js';
 
 const ANOMALY_SCAN_INTERVAL_MS = 5 * 60_000;
 const ANOMALY_SCAN_WINDOW_H = 3;
@@ -54,7 +55,7 @@ async function bootstrap(): Promise<void> {
   for (const routes of [
     statusRoutes, ingestRoutes, readingsRoutes, deviceRoutes, coverageRoutes,
     forecastRoutes, anomaliesRoutes, recommendationsRoutes, compareRoutes,
-    analyticsRoutes, cityRoutes, chatRoutes,
+    analyticsRoutes, cityRoutes, chatRoutes, placesRoutes,
   ]) {
     await app.register(routes);
   }

@@ -106,6 +106,30 @@ export interface ChatReply {
   suggestions: string[];
 }
 
+export interface WalkSpot extends Point {
+  id: string;
+  name: string;
+  kind: 'park' | 'square' | 'promenade' | 'mountain';
+  distance_km: number;
+  pm25_estimate: number;
+  traffic_index: number;
+  construction_zone: boolean;
+  score: number;
+  verdict: 'отлично' | 'хорошо' | 'приемлемо' | 'не сегодня';
+  reason: string;
+}
+
+export interface AddressCheck {
+  address: string;
+  lat: number;
+  lng: number;
+  alternatives: string[];
+  status: BackendStatus;
+  status_reason: string;
+  max_safe_duration_min: number;
+  recommendations: Recommendation[];
+}
+
 export interface AnomalyEvent {
   id?: number;
   device_id: string;
@@ -136,6 +160,10 @@ export const api = {
     get<FullStatus>(`/api/status?lat=${p.lat}&lng=${p.lng}&profile=${profile}`),
   anomalies: (sinceHours = 24) =>
     get<{ anomalies: AnomalyEvent[] }>(`/api/anomalies?since=${hoursAgo(sinceHours)}`).then((r) => r.anomalies),
+  walkSpots: (p: Point, limit = 6) =>
+    get<{ spots: WalkSpot[] }>(`/api/walk-spots?lat=${p.lat}&lng=${p.lng}&limit=${limit}`).then((r) => r.spots),
+  checkAddress: (q: string, profile: Profile = 'default') =>
+    get<AddressCheck>(`/api/check-address?q=${encodeURIComponent(q)}&profile=${profile}`),
   chat: (message: string, p: Point, profile: Profile = 'default') =>
     fetch(`${BASE}/api/chat`, {
       method: 'POST',

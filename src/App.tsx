@@ -4,6 +4,9 @@ import Hero from './components/Hero';
 import CoverageMap from './components/CoverageMap';
 import GapSection from './components/GapSection';
 import BriefingSection from './components/BriefingSection';
+import WalkSpotsSection from './components/WalkSpotsSection';
+import ImpactSection from './components/ImpactSection';
+import JoinSection from './components/JoinSection';
 import ChatWidget from './components/ChatWidget';
 import AdviceSection from './components/AdviceSection';
 import AboutSection, { Footer } from './components/AboutSection';
@@ -69,7 +72,10 @@ export default function App() {
         <CoverageMap devices={devices} />
         <GapSection devices={devices} />
         <BriefingSection district={district} status={status} />
+        <WalkSpotsSection district={district} />
         <AdviceSection current={copy.key} />
+        <ImpactSection />
+        <JoinSection />
         <AboutSection />
         <Footer />
       </div>

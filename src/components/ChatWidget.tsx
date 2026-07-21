@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { api, type District } from '../lib/api';
 
 interface ChatWidgetProps {
@@ -50,6 +50,10 @@ export default function ChatWidget({ district }: ChatWidgetProps) {
     }
   };
 
+  // Позиция — инлайн-стилями: fixed-элементы не должны зависеть от порядка
+  // CSS-слоёв или чужих stacking-контекстов.
+  const anchor: CSSProperties = { position: 'fixed', right: 20, zIndex: 9000 };
+
   return (
     <>
       {/* плавающая кнопка */}
@@ -57,13 +61,22 @@ export default function ChatWidget({ district }: ChatWidgetProps) {
         type="button"
         aria-label="Открыть эко-ассистента"
         onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-white text-black text-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
+        style={{ ...anchor, bottom: 20 }}
+        className="w-14 h-14 rounded-full bg-white text-black text-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
       >
         {open ? '×' : '💬'}
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-[min(380px,calc(100vw-2rem))] liquid-glass rounded-2xl flex flex-col overflow-hidden" style={{ height: 'min(520px, 70vh)', background: 'rgba(10,12,16,0.92)' }}>
+        <div
+          className="liquid-glass rounded-2xl flex flex-col overflow-hidden"
+          style={{
+            ...anchor,
+            bottom: 88,
+            width: 'min(380px, calc(100vw - 40px))',
+            height: 'min(520px, 70vh)',
+          }}
+        >
           <div className="px-5 py-3.5 border-b border-white/10 flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full" style={{ background: 'var(--status-c, var(--good))' }} />
             <div>
