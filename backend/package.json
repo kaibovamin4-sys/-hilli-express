@@ -10,7 +10,7 @@
     "seed": "tsx --env-file=.env src/mock/seed.ts"
   },
   "engines": {
-    ">=22.5.0 <23.0.0"
+    "node": ">=22.5.0 <23.0.0"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
