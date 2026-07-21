@@ -2,10 +2,10 @@
 //
 // Heuristic: indoor air is worse than you think — recommend a ventilation
 // window when all of these hold at once:
-//   • outdoor PM2.5 low (below WHO 24h guideline ≈ 15 µg/m³ scaled by tolerance)
-//   • not raining hard (< 2 mm/h)
-//   • wind not extreme (< 12 m/s gusts)
-//   • temperature is not so far from indoor comfort that it wastes heating/cooling
+//   - outdoor PM2.5 low (below WHO 24h guideline ≈ 15 µg/m³ scaled by tolerance)
+//   - not raining hard (< 2 mm/h)
+//   - wind not extreme (< 12 m/s gusts)
+//   - temperature is not so far from indoor comfort that it wastes heating/cooling
 //
 // Returns up to 3 windows over the next 24 h, each rated "excellent" / "good".
 

@@ -1,9 +1,6 @@
-// Route exposure — given a polyline (list of lat/lng waypoints), sample it
-// along the way, run IDW at each sample, integrate PM2.5 over the walking
-// time. Output: total dose (µg·min), cigarettes-equivalent, worst segment.
-//
-// Sampling: constant step in kilometres so a long route doesn't blow up.
-// Walking pace default 5 km/h.
+// Estimates pollution exposure along a walking route. Samples the polyline at a
+// fixed step, runs IDW at each sample, and integrates PM2.5 over walking time to
+// get a total dose, a cigarettes-equivalent, and the worst segment.
 
 import type { Point } from '../types.js';
 import { idw, distanceKm, type IdwSource } from '../processing/idw.js';
@@ -42,7 +39,7 @@ export async function analyseRoute(input: RouteInput): Promise<RouteResult> {
   const waypoints = input.waypoints;
   if (waypoints.length < 2) throw new Error('At least two waypoints required');
 
-  // Sample the polyline: linear interpolation between each segment.
+  // Interpolate points along each segment at the requested step.
   const samples: { lat: number; lng: number; distance_km: number }[] = [];
   let cumDist = 0;
   samples.push({ ...waypoints[0]!, distance_km: 0 });
@@ -64,7 +61,7 @@ export async function analyseRoute(input: RouteInput): Promise<RouteResult> {
     cumDist += segLen;
   }
 
-  // Build IDW sources once.
+  // Latest reading per active device becomes an IDW source.
   const devices = listDevices(true);
   const latest = new Map(latestProcessedByDevice().map((r) => [r.device_id, r]));
   const sources: IdwSource[] = devices
@@ -74,7 +71,7 @@ export async function analyseRoute(input: RouteInput): Promise<RouteResult> {
       value: latest.get(d.id)!.aqi_composite,
     }));
 
-  // External PM2.5 anchor (city-level).
+  // City-level PM2.5 from Open-Meteo anchors the local estimates.
   let cityPm: number | null = null;
   try {
     const a = await getAirQuality(waypoints[0]!.lat, waypoints[0]!.lng);

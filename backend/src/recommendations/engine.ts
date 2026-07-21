@@ -67,8 +67,7 @@ export function generateRecommendations(input: EngineInput): EngineOutput {
   return { recommendations: sorted, max_safe_duration_min: duration };
 }
 
-// ─── Rule groups ──────────────────────────────────────────────────────────
-
+// Rule groups
 function airRules(input: EngineInput, sens: number): Recommendation[] {
   const out: Recommendation[] = [];
   const pm = input.air?.pm2_5;

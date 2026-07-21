@@ -15,9 +15,9 @@
 //                   patch — half a district — while never pretending to
 //                   measure the far side of the city.
 //
-// This is honest: far from stations the answer converges to the city model,
+// Far from any station the estimate converges to the city model,
 // near a station local events dominate. Coverage is therefore 100% of the
-// map with variable CONFIDENCE, not a hard blind cutoff.
+// map with a variable confidence value instead of a hard blind cutoff.
 
 import type { Point, ProcessedReading } from '../types.js';
 import { distanceKm } from './idw.js';

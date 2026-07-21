@@ -1,17 +1,15 @@
-// Anomaly classifier — infer the physical event behind a sensor spike.
+// Guesses the physical event behind a sensor spike. The three MQ sensors react
+// differently to different gases, so an event leaves a characteristic ratio of
+// increases across them. We take (current mean / baseline mean) per sensor and
+// match that vector against known patterns by cosine similarity.
 //
-// Idea: MQ2 / MQ4 / MQ8 have different chemical selectivities. A given event
-// creates a characteristic "fingerprint" of relative increases across the
-// three. We compare (current window mean) / (baseline window mean) per sensor
-// against known patterns, pick the closest match by cosine similarity.
-//
-// Patterns (empirical, from combustion chemistry):
-//   fire_smoke       — MQ2↑↑ (smoke), MQ8↑↑ (H2 from incomplete combustion), MQ4 flat
-//   gas_leak         — MQ4↑↑↑ (CH4), MQ2 mild, MQ8 mild
-//   traffic          — MQ2↑↑ (unburnt HC), MQ4↑, MQ8 mild
-//   industrial       — all three ↑ roughly equally
-//   inversion_smog   — slow linear rise on all three (rate matters, not just ratio)
-//   normal           — no anomaly
+// Reference patterns (from combustion chemistry):
+//   fire_smoke      MQ2 and MQ8 up (smoke + H2), MQ4 flat
+//   gas_leak        MQ4 strongly up (methane), others mild
+//   traffic         MQ2 up (unburnt hydrocarbons), MQ4 up, MQ8 mild
+//   industrial      all three up roughly equally
+//   inversion_smog  slow steady rise on all three
+//   normal          no anomaly
 
 import type { ProcessedReading } from '../types.js';
 

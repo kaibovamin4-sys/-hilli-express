@@ -1,5 +1,5 @@
-// All six "wow" analytics endpoints in one file — they're thin HTTP wrappers
-// around pure functions in src/analytics/*.
+// The six analytics endpoints. Each is a thin HTTP wrapper around a pure
+// function in src/analytics/.
 
 import type { FastifyPluginAsync } from 'fastify';
 import { config } from '../config.js';
@@ -13,7 +13,7 @@ import { getAirQuality } from '../external/openMeteo.js';
 import { processedRange, getDevice } from '../db/repositories.js';
 
 export const analyticsRoutes: FastifyPluginAsync = async (app) => {
-  // ─── 1. Cigarettes equivalent ───────────────────────────────────────────
+  // 1. Cigarettes equivalent
   app.get('/api/cigarettes', {
     schema: {
       querystring: {
@@ -38,7 +38,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (app) => {
     return cigarettesFromExposure(pm, hours);
   });
 
-  // ─── 2. Anomaly classifier ──────────────────────────────────────────────
+  // 2. Anomaly classifier
   app.get('/api/classify/:device_id', {
     schema: {
       params: {
@@ -64,7 +64,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (app) => {
     return { device_id: p.device_id, ts: new Date().toISOString(), ...c };
   });
 
-  // ─── 3. AQI forecast (6h default) ───────────────────────────────────────
+  // 3. AQI forecast (6h default)
   app.get('/api/forecast/aqi', {
     schema: {
       querystring: {
@@ -86,7 +86,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (app) => {
     return forecastAqi(q.device_id, lat, lng, q.hours ?? 6);
   });
 
-  // ─── 4. Ventilation windows ─────────────────────────────────────────────
+  // 4. Ventilation windows
   app.get('/api/ventilation', {
     schema: {
       querystring: {
@@ -107,7 +107,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (app) => {
     );
   });
 
-  // ─── 5. Route exposure ──────────────────────────────────────────────────
+  // 5. Route exposure
   app.post('/api/route-exposure', {
     schema: {
       body: {
@@ -136,7 +136,7 @@ export const analyticsRoutes: FastifyPluginAsync = async (app) => {
     return analyseRoute(b);
   });
 
-  // ─── 6. Sensor health ───────────────────────────────────────────────────
+  // 6. Sensor health
   app.get('/api/sensor-health', async () => ({ devices: healthForAll() }));
 
   app.get('/api/sensor-health/:device_id', {

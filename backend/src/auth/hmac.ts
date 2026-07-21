@@ -22,9 +22,16 @@ export function sign(secret: string, body: string): string {
   return createHmac('sha256', secret).update(body).digest('hex');
 }
 
+// SHA-256 hex digest is always 64 lowercase hex chars. Reject anything else
+// up front: `Buffer.from(x, 'hex')` silently drops invalid nibbles, which for
+// a malformed input can yield a zero-length buffer and, paired with another
+// zero-length buffer, make timingSafeEqual return true.
+const HEX64 = /^[0-9a-f]{64}$/i;
+
 export function verify(deviceId: string, body: string, signatureHex: string): boolean {
   const secret = secrets.get(deviceId);
   if (!secret) return false;
+  if (!HEX64.test(signatureHex)) return false;
   const expected = sign(secret, body);
   const a = Buffer.from(expected, 'hex');
   const b = Buffer.from(signatureHex, 'hex');

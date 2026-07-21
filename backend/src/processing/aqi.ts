@@ -1,11 +1,10 @@
-// Composite air quality index for MQ sensors.
+// Composite air-quality index for the MQ sensors. Same shape as the US AQI: a
+// piecewise-linear sub-index per gas (0..500), and the final index is the max,
+// so one bad gas dominates.
 //
-// EPA-style piecewise linear mapping: sub-index per gas 0..500, final index is
-// the MAX (a single bad gas dominates — same shape as US AQI).
-//
-// Breakpoints are picked from MQ sensor sensitivity, NOT WHO/EPA thresholds
-// — MQ measurements are combustible-gas equivalents, not medical dose curves.
-// We label the output as "composite sensor index" everywhere.
+// The breakpoints come from MQ sensitivity, not WHO/EPA health thresholds - MQ
+// readings are combustible-gas equivalents, not a medical dose. The output is
+// labelled "composite sensor index" everywhere so it is not mistaken for one.
 
 export interface AqiBreakpoint {
   ppm: number;

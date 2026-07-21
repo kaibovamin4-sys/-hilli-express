@@ -1,12 +1,11 @@
-// Status derivation — combined AQI (local MQ composite + external PM2.5 if any).
+// Derives the good/moderate/bad status from the local MQ composite and, when
+// available, external PM2.5.
 //
-// Priority order:
-//   1. If external PM2.5 available (Open-Meteo) — that's the physical air-
-//      quality anchor; MQ composite is used as a modifier that can only push
-//      the status worse, never better.
-//   2. Otherwise fall back to MQ composite (limited to smoke/gas events).
+// When Open-Meteo PM2.5 is present it's the primary anchor and the MQ composite
+// can only make the status worse, never better. Without it we fall back to the
+// MQ composite alone, which only catches nearby smoke/gas events.
 //
-// Bad-side thresholds match WHO 24h PM2.5 guidance: 15/35/75 µg/m³.
+// PM2.5 thresholds follow WHO 24h guidance: 15 / 35 / 75 µg/m³.
 
 import type { StatusLevel } from '../types.js';
 

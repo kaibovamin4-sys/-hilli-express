@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { listDevices, getDevice, listDistricts, updateR0, getRecentRaw } from '../db/repositories.js';
 import { calibrateR0 } from '../processing/calibration.js';
+import { requireAdmin } from '../auth/admin.js';
 
 export const deviceRoutes: FastifyPluginAsync = async (app) => {
   app.get('/api/devices', async () => {
@@ -22,6 +23,7 @@ export const deviceRoutes: FastifyPluginAsync = async (app) => {
 
   // Admin: recompute R0 from the last N minutes of raw readings (assumes clean air).
   app.post('/api/devices/:id/calibrate', {
+    preHandler: requireAdmin,
     schema: {
       params: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
       body: {

@@ -1,12 +1,9 @@
-// Open-Meteo integration.
+// Open-Meteo integration. Both endpoints are key-free:
+//   forecast     https://api.open-meteo.com/v1/forecast
+//   air-quality  https://air-quality-api.open-meteo.com/v1/air-quality  (also pollen)
 //
-// Three endpoints, all key-free:
-//   Weather:      https://api.open-meteo.com/v1/forecast
-//   Air quality:  https://air-quality-api.open-meteo.com/v1/air-quality
-//   (Pollen fields are included in the air-quality endpoint.)
-//
-// Each response is cached ~10 min per (lat, lng) rounded to 0.05°. Reasoning:
-// forecast granularity is hourly, no point re-fetching each user click.
+// Responses are cached ~10 min per location (rounded to 0.05 degrees) since the
+// data is hourly and there's no point re-fetching on every click.
 
 import { request } from 'undici';
 import type {

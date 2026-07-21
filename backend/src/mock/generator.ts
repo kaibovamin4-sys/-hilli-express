@@ -1,14 +1,11 @@
-// Mock data generator.
+// Generates fake ADC readings so the full pipeline (calibration, processing,
+// API) can run without real hardware. Each value combines four parts:
+//   1. a per-district baseline (residential vs industrial)
+//   2. two daily rush-hour bumps (~8am and ~7pm)
+//   3. a slow weekly swing for winter inversion smog
+//   4. mean-reverting (Ornstein-Uhlenbeck) noise, so it drifts smoothly
 //
-// Emits ADC readings for each device so the pipeline (calibration → processing
-// → API) is exercised end-to-end even without real hardware. Values are made
-// of four components:
-//   1) baseline per district (residential ≠ industrial)
-//   2) diurnal modulation — two rush-hour bumps (~8am, ~7pm)
-//   3) weekly slow modulation — inversion / anticyclone (winter smog)
-//   4) Ornstein–Uhlenbeck mean-reverting noise (smooth, not white)
-//
-// Anomalies can be injected via injectAnomaly() to demo the alert path.
+// injectAnomaly() forces a spike to demo the alert path.
 
 import type { Device, RawReading, ProcessedReading, SensorKind } from '../types.js';
 import { MQ_COEFFS } from '../processing/calibration.js';
@@ -17,7 +14,7 @@ import {
   insertRaw, insertProcessed, listDevices, touchDeviceSeen, insertRawBatch, insertProcessedBatch,
 } from '../db/repositories.js';
 
-// ─── Deterministic PRNG (seeded per device) ───────────────────────────────
+// Deterministic PRNG (seeded per device)
 // Small-state PRNG (mulberry32) so history is reproducible across restarts.
 function mulberry32(seed: number) {
   let s = seed >>> 0;
@@ -39,8 +36,7 @@ function seedFromString(s: string): number {
   return h >>> 0;
 }
 
-// ─── State per device ─────────────────────────────────────────────────────
-
+// State per device
 interface DeviceState {
   ou: { mq2: number; mq4: number; mq8: number };
   rand: () => number;
@@ -61,8 +57,7 @@ function getState(device: Device): DeviceState {
   return s;
 }
 
-// ─── Signal shape ─────────────────────────────────────────────────────────
-
+// Signal shape
 function diurnalFactor(hour: number): number {
   // Two-gaussian bumps at 8:00 and 19:00, baseline 1.
   const g = (x: number, mu: number, sigma: number) =>
@@ -99,8 +94,7 @@ function normal(rand: () => number): number {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-// ─── Anomaly injection ────────────────────────────────────────────────────
-
+// Anomaly injection
 export type AnomalyKind = 'traffic_spike' | 'industrial_release' | 'fire_smoke';
 
 const ANOMALY_DURATION_MS: Record<AnomalyKind, number> = {
@@ -133,8 +127,7 @@ function anomalyMul(s: DeviceState, kind: SensorKind, nowMs: number): number {
   return 1 + (target - 1) * shape;
 }
 
-// ─── Emit one reading ─────────────────────────────────────────────────────
-
+// Emit one reading
 function ppmToAdc(ppm: number, r0: number, vccMv: number, rlOhm: number, kind: SensorKind): number {
   const { a, b } = MQ_COEFFS[kind];
   const ratio = Math.pow(Math.max(0.001, ppm / a), 1 / b);
@@ -185,8 +178,7 @@ export function generateOne(device: Device, at: Date = new Date()): { raw: RawRe
   return { raw, processed };
 }
 
-// ─── Worker loop (mock only) ──────────────────────────────────────────────
-
+// Worker loop (mock only)
 let timer: NodeJS.Timeout | null = null;
 
 export function startMockLoop(intervalMs: number): void {
@@ -210,8 +202,7 @@ export function stopMockLoop(): void {
   timer = null;
 }
 
-// ─── History seed ─────────────────────────────────────────────────────────
-
+// History seed
 export function seedHistory(days: number): { insertedRaw: number; insertedProc: number } {
   const devs = listDevices(true);
   const now = new Date();

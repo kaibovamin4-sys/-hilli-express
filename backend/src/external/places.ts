@@ -36,8 +36,7 @@ export const WALK_SPOTS: WalkSpot[] = [
   { id: 'almaty-arboretum', name: 'Дендропарк (Аксай)', kind: 'park', lat: 43.2205, lng: 76.8280, green_bonus: 0.7 },
 ];
 
-// ─── Geocoding via Nominatim ──────────────────────────────────────────────
-
+// Geocoding via Nominatim
 // Almaty bounding box: lng 76.7..77.15, lat 43.10..43.42
 const VIEWBOX = '76.70,43.42,77.15,43.10';
 const GEOCODE_TTL_MS = 24 * 3_600_000;
@@ -73,8 +72,7 @@ export async function geocode(query: string): Promise<GeocodeHit[]> {
   });
 }
 
-// ─── Spot ranking ─────────────────────────────────────────────────────────
-
+// Spot ranking
 export interface RankedSpot extends WalkSpot {
   distance_km: number;
   pm25_estimate: number;

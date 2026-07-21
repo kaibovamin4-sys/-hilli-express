@@ -4,6 +4,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
+import rateLimit from '@fastify/rate-limit';
 
 import { config } from './config.js';
 import { getDb, closeDb } from './db/client.js';
@@ -41,8 +42,19 @@ async function bootstrap(): Promise<void> {
     bodyLimit: 32 * 1024,
   });
 
-  await app.register(cors, { origin: config.corsOrigin });
+  // CORS_ORIGIN may be a comma-separated list of allowed origins.
+  const origins = config.corsOrigin.split(',').map((s) => s.trim()).filter(Boolean);
+  await app.register(cors, { origin: origins.length === 1 ? origins[0] : origins });
   await app.register(sensible);
+
+  // Global rate limit (per IP). Device ingest is authenticated by HMAC and can
+  // legitimately be high-frequency, so it opts out via its own config below.
+  await app.register(rateLimit, {
+    global: true,
+    max: 120,
+    timeWindow: '1 minute',
+    allowList: (req) => req.url.startsWith('/api/ingest'),
+  });
 
   app.get('/api/health', async () => ({
     ok: true,

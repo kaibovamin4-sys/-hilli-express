@@ -1,13 +1,11 @@
-// Traffic congestion model for Almaty.
+// Traffic congestion model for Almaty. There's no free live-traffic API, so
+// this is a synthetic model (every response is labelled as such): the main
+// corridors plus a weekly/daily congestion profile tuned to local rush hours
+// (morning peak toward the centre, evening peak outward, Friday worst).
 //
-// No key-free live traffic API exists, so this is a MODEL, clearly labelled
-// as such in every response: major corridors + weekly/diurnal congestion
-// profile calibrated to Almaty rush patterns (morning peak toward center,
-// evening peak outward, Friday worst, weekend flat).
-//
-// congestionAt(point, date) → 0..10 index for the nearest corridor, decayed
-// by distance. Swap-in point for a real provider (TomTom/2GIS) later: keep
-// the same interface, replace corridorLoad().
+// congestionAt(point, date) returns a 0..10 index for the nearest corridor,
+// decayed by distance. To plug in a real provider (TomTom/2GIS) later, keep the
+// interface and replace corridorLoad().
 
 import type { Point } from '../types.js';
 import { distanceKm } from '../processing/idw.js';

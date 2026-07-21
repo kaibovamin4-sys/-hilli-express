@@ -1,9 +1,7 @@
-// Rule-based eco assistant.
-//
-// No external LLM: intent detection by keyword patterns, answers are
-// TEMPLATES FILLED WITH LIVE DATA (status, weather, pollen, traffic,
-// construction, forecast). Every number in a reply is real. Honest about
-// what it is: if no intent matches, it says so and lists what it can do.
+// Rule-based assistant, no LLM. Detects intent from keyword patterns and fills
+// response templates with live data (status, weather, pollen, traffic,
+// construction, forecast). If nothing matches, it says so and lists what it
+// can answer.
 
 import type { FullStatus } from '../types.js';
 import type { TrafficInfo } from '../external/traffic.js';

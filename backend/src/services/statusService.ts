@@ -1,5 +1,6 @@
-// Composes the /api/status response: local IDW + external weather/air/pollen
-// + recommendations + walk-window. This is the "what to render" service.
+// Builds the full /api/status payload: local IDW estimate, external
+// weather/air/pollen, recommendations, and the best walk window. This is the
+// layer that decides what the client renders.
 
 import { config } from '../config.js';
 import { getWeather, getAirQuality } from '../external/openMeteo.js';
@@ -48,15 +49,14 @@ export async function computeFullStatus(req: StatusRequest): Promise<FullStatus>
   const w = weather.status === 'fulfilled' ? weather.value : null;
   const a = airQ.status === 'fulfilled' ? airQ.value : null;
 
-  // Fusion: city background + Gaussian MQ corrections → PM2.5 estimate that
+  // Fusion: city background plus Gaussian MQ corrections give a PM2.5 estimate
   // covers the whole map (confidence varies instead of hard blind zones).
   const fusion = a?.current.pm2_5 != null
     ? fuseAt(req.point, a.current.pm2_5, stationAnomalies(devices))
     : null;
 
-  // City layers: traffic + construction add honest local penalties — near a
-  // jammed corridor or inside a construction dust zone the air is worse than
-  // the background model knows.
+  // Traffic and construction add local penalties: near a jammed corridor or a
+  // construction dust zone the air is worse than the background model shows.
   const traffic = congestionAt(req.point);
   const construction = constructionImpact(req.point);
   const trafficPenalty = traffic.index >= 4.5 ? (traffic.index / 10) * 8 : 0;

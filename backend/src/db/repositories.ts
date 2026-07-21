@@ -1,15 +1,14 @@
-// Data access layer. Isolates SQL/binding details from the rest of the app.
+// Data access layer. All SQL lives here so the rest of the app never touches
+// the database directly.
 //
-// node:sqlite binding notes:
-//   • named params in SQL use `:name` (or `@name`, `$name`); pass a plain
-//     object to `.run` / `.get` / `.all`;
-//   • `null` maps to SQL NULL; numbers/strings map naturally;
-//   • booleans are NOT supported → we store `active` as INTEGER 0/1.
+// node:sqlite binding notes: named params use `:name`; pass a plain object to
+// run/get/all. `null` maps to SQL NULL. Booleans are not supported, so the
+// `active` flag is stored as INTEGER 0/1 (see bool01 in client.ts).
 
 import type { Device, RawReading, ProcessedReading, AnomalyEvent } from '../types.js';
 import { getDb, bool01 } from './client.js';
 
-// ─── Devices ──────────────────────────────────────────────────────────────
+// Devices
 
 export function upsertDevice(d: Device): void {
   getDb()
@@ -56,7 +55,7 @@ export function updateR0(id: string, r0_mq2: number, r0_mq4: number, r0_mq8: num
     .run(r0_mq2, r0_mq4, r0_mq8, id);
 }
 
-// ─── Raw readings ─────────────────────────────────────────────────────────
+// Raw readings
 
 const rawInsertSql = `INSERT OR IGNORE INTO readings_raw
   (device_id, ts, mq2_adc, mq4_adc, mq8_adc, temp_c, humidity, vcc_mv)
@@ -99,7 +98,7 @@ export function getRecentRaw(deviceId: string, sinceIso: string): RawReading[] {
     .all(deviceId, sinceIso) as unknown as RawReading[];
 }
 
-// ─── Processed readings ───────────────────────────────────────────────────
+// Processed readings
 
 const procInsertSql = `INSERT OR REPLACE INTO readings_processed
   (device_id, ts, mq2_ppm, mq4_ppm, mq8_ppm, aqi_composite, status, quality_flag)
@@ -163,7 +162,7 @@ export function processedRange(deviceId: string, fromIso: string, toIso: string)
     .all(deviceId, fromIso, toIso) as unknown as ProcessedReading[];
 }
 
-// ─── Anomalies ────────────────────────────────────────────────────────────
+// Anomalies
 
 export function insertAnomaly(a: AnomalyEvent): number {
   const info = getDb()
@@ -188,7 +187,7 @@ export function recentAnomalies(sinceIso: string): AnomalyEvent[] {
     .all(sinceIso) as unknown as AnomalyEvent[];
 }
 
-// ─── Districts ────────────────────────────────────────────────────────────
+// Districts
 
 export interface DistrictRow {
   id: string;

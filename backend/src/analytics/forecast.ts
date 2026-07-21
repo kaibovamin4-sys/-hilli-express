@@ -102,8 +102,7 @@ export async function forecastAqi(
   };
 }
 
-// ─── Holt linear exponential smoothing (level + trend) ────────────────────
-
+// Holt linear exponential smoothing (level + trend)
 function holtForecast(series: number[], horizon: number, alpha = 0.5, beta = 0.15): number[] {
   if (series.length < 3) return new Array(horizon).fill(series[series.length - 1] ?? 0);
   let level = series[0]!;
