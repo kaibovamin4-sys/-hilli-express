@@ -130,6 +130,21 @@ export interface AddressCheck {
   recommendations: Recommendation[];
 }
 
+export interface Placement {
+  order: number;
+  lat: number;
+  lng: number;
+  cumulative_coverage: number;
+}
+
+export interface PlacementResult {
+  effective_radius_km: number;
+  placements: Placement[];
+  coverage_curve: Array<{ stations: number; coverage: number }>;
+  stations_for_90pct: number | null;
+  existing_considered: number;
+}
+
 export interface AnomalyEvent {
   id?: number;
   device_id: string;
@@ -160,6 +175,8 @@ export const api = {
     get<FullStatus>(`/api/status?lat=${p.lat}&lng=${p.lng}&profile=${profile}`),
   anomalies: (sinceHours = 24) =>
     get<{ anomalies: AnomalyEvent[] }>(`/api/anomalies?since=${hoursAgo(sinceHours)}`).then((r) => r.anomalies),
+  optimizePlacement: (stations = 20) =>
+    get<PlacementResult>(`/api/optimize-placement?stations=${stations}&include_existing=true`),
   walkSpots: (p: Point, limit = 6) =>
     get<{ spots: WalkSpot[] }>(`/api/walk-spots?lat=${p.lat}&lng=${p.lng}&limit=${limit}`).then((r) => r.spots),
   checkAddress: (q: string, profile: Profile = 'default') =>
