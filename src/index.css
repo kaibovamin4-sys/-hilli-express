@@ -18,6 +18,14 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keeps anchored sections from landing underneath the sticky navbar. */
+  scroll-padding-top: 88px;
+}
+
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 96px;
+  }
 }
 
 body {

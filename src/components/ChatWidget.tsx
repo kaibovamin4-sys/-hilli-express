@@ -62,7 +62,7 @@ export default function ChatWidget({ district }: ChatWidgetProps) {
         aria-label="Открыть эко-ассистента"
         onClick={() => setOpen((o) => !o)}
         style={{ ...anchor, bottom: 20 }}
-        className="w-14 h-14 rounded-full bg-white text-black text-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
+        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-black text-xl md:text-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
       >
         {open ? '×' : '💬'}
       </button>

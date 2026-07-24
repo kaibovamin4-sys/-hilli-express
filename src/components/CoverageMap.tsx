@@ -62,7 +62,13 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
 
   useEffect(() => {
     if (!mapEl.current || mapRef.current) return;
-    const map = L.map(mapEl.current, { scrollWheelZoom: false }).setView([CITY.lat, CITY.lng], 11);
+    // On touch devices a one-finger swipe should scroll the page, not pan the
+    // map; dragging still works with two fingers. Desktop keeps normal drag,
+    // with wheel-zoom off so the page doesn't get trapped under the cursor.
+    const map = L.map(mapEl.current, {
+      scrollWheelZoom: false,
+      dragging: !L.Browser.mobile,
+    }).setView([CITY.lat, CITY.lng], 11);
     mapRef.current = map;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -238,7 +244,7 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
       sub="Точки — сеть наших датчиков (MQ2/MQ4/MQ8). Контуры — официальные границы районов Алматы, закрашены по среднему PM2.5 датчиков внутри. Заштрихованные области — районы, где до ближайшего поста дальше 3,5 км: там официальных измерений фактически нет."
     >
       <div className="liquid-glass rounded-2xl p-2.5">
-        <div className="flex items-center justify-between px-1.5 pb-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1.5 pb-2.5">
           <span className="text-[13px] text-gray-400">
             {trafficTilesEnabled
               ? 'Пробки: весь город · TomTom'
@@ -246,12 +252,12 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
           </span>
           <button
             onClick={() => setShowTraffic((v) => !v)}
-            className="text-[13px] text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
+            className="text-[13px] whitespace-nowrap flex-none text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
           >
             {showTraffic ? 'Скрыть пробки' : 'Показать пробки'}
           </button>
         </div>
-        <div ref={mapEl} className="h-[480px] rounded-[14px] z-[1]" />
+        <div ref={mapEl} className="h-[340px] sm:h-[420px] md:h-[480px] rounded-[14px] z-[1]" />
       </div>
 
       <div className="flex flex-wrap gap-2.5 mt-4">

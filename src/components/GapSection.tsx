@@ -88,8 +88,8 @@ export default function GapSection({ devices }: GapSectionProps) {
       sub="Сравниваем район с самым чистым воздухом и район с самым грязным по данным нашей сети. Разница внутри одного города — это норма, о которой обычно не говорят."
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_1.5fr]">
-        <div className="liquid-glass rounded-2xl p-7 flex flex-col justify-between gap-5">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3.5">
+        <div className="liquid-glass rounded-2xl p-5 sm:p-7 flex flex-col justify-between gap-5">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-3.5">
             <div>
               <div
                 className="font-light leading-none"
@@ -101,8 +101,8 @@ export default function GapSection({ devices }: GapSectionProps) {
                 Чистый район<br />{officialName}, µg/m³
               </div>
             </div>
-            <div className="text-[color:var(--muted)] text-sm">vs</div>
-            <div className="text-right">
+            <div className="text-[color:var(--muted)] text-sm pt-4">vs</div>
+            <div>
               <div
                 className="font-light leading-none"
                 style={{ fontSize: 'clamp(44px, 5vw, 72px)', letterSpacing: '-0.04em', color: 'var(--bad)' }}

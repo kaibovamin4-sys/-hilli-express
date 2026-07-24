@@ -84,6 +84,8 @@ export default function App() {
         <JoinSection />
         <AboutSection />
         <Footer />
+        {/* Clearance so the floating chat button never covers the last lines. */}
+        <div className="h-20 md:h-0" aria-hidden="true" />
       </div>
 
       <ChatWidget district={district} />
