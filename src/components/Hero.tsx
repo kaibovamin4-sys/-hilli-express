@@ -113,7 +113,7 @@ export default function Hero({ districts, district, status, districtGeo, onDistr
       className="relative z-[1] px-6 md:px-12 lg:px-16 max-w-7xl mx-auto flex flex-col justify-end pb-12"
       style={{ minHeight: 'calc(100vh - 90px)' }}
     >
-      <div className="flex flex-wrap items-center gap-2.5 mb-6">
+      <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 mb-6">
         <button
           type="button"
           onClick={locate}
@@ -144,17 +144,19 @@ export default function Hero({ districts, district, status, districtGeo, onDistr
         </select>
       </div>
 
-      <p className="text-[13px] tracking-[0.14em] uppercase text-[color:var(--muted)] mb-3">
+      <p className="text-[13px] tracking-[0.14em] uppercase text-[color:var(--muted)] mb-3 text-center md:text-left">
         Ваш воздух сейчас · {districtName} район
       </p>
 
-      <AnimatedStatus text={st.word} color={st.cssVar} />
+      <div className="text-center md:text-left">
+        <AnimatedStatus text={st.word} color={st.cssVar} />
+      </div>
 
       <div className="grid gap-7 lg:grid-cols-[1.35fr_1fr] lg:items-end">
-        <div>
-          <p className="text-base md:text-lg text-gray-300 max-w-xl mb-2">{st.sub}</p>
+        <div className="text-center md:text-left">
+          <p className="text-base md:text-lg text-gray-300 max-w-xl mb-2 mx-auto md:mx-0">{st.sub}</p>
 
-          <p className="text-[13.5px] text-[color:var(--muted)] mb-6 flex items-center gap-2">
+          <p className="text-[13.5px] text-[color:var(--muted)] mb-6 flex items-center justify-center md:justify-start gap-2">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-none opacity-70" aria-hidden="true">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 8v4M12 16h.01" />
@@ -169,7 +171,7 @@ export default function Hero({ districts, district, status, districtGeo, onDistr
             )}
           </p>
 
-          <div className="flex flex-wrap gap-3.5">
+          <div className="flex flex-wrap justify-center md:justify-start gap-3.5">
             <a
               href="#advice"
               className="bg-white text-black px-8 py-3 rounded-xl font-medium hover:bg-gray-100 transition-colors"
