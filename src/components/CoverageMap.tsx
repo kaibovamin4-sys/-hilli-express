@@ -70,11 +70,21 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
       dragging: !L.Browser.mobile,
     }).setView([CITY.lat, CITY.lng], 11);
     mapRef.current = map;
+
+    // Tailwind's responsive height classes (h-[340px] sm:h-[420px] ...) resize
+    // the container via CSS, but Leaflet only measures it once at init and on
+    // window 'resize'. Without this, the map keeps rendering tiles sized for
+    // whichever height was current at mount, which crops or blanks the view
+    // whenever the container's actual height differs (viewport width/height
+    // ready at different times, orientation change, etc).
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(mapEl.current);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 18,
     }).addTo(map);
     return () => {
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
     };

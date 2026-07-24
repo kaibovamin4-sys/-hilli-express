@@ -110,7 +110,7 @@ export default function Hero({ districts, district, status, districtGeo, onDistr
   return (
     <header
       id="top"
-      className="relative z-[1] px-6 md:px-12 lg:px-16 pr-[76px] md:pr-12 lg:pr-16 max-w-7xl mx-auto flex flex-col justify-end pb-12"
+      className="relative z-[1] px-6 md:px-12 lg:px-16 max-w-7xl mx-auto flex flex-col justify-end pb-12"
       style={{ minHeight: 'calc(100vh - 90px)' }}
     >
       <div className="flex flex-wrap items-center gap-2.5 mb-6">
@@ -186,9 +186,9 @@ export default function Hero({ districts, district, status, districtGeo, onDistr
           </div>
         </div>
 
-        <div className="liquid-glass rounded-2xl px-7 py-6">
+        <div className="liquid-glass rounded-2xl px-7 py-6 pr-[76px] sm:pr-7">
           <div
-            className="font-light leading-none transition-colors duration-700"
+            className="font-light leading-none transition-colors duration-700 max-w-full"
             style={{ fontSize: 'clamp(56px, 6vw, 84px)', letterSpacing: '-0.04em', color: st.cssVar }}
           >
             {pm}
