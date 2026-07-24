@@ -60,9 +60,18 @@ export default function App() {
             muted
             playsInline
           />
+          {/* Darkens the whole video a fixed amount so hero text stays readable
+              regardless of which frame (bright sky vs dark buildings) is showing. */}
+          <div className="absolute inset-0 bg-black/40" />
           <div
             className="absolute inset-x-0 bottom-0 h-40"
             style={{ background: 'linear-gradient(180deg, transparent, var(--bg))' }}
+          />
+          {/* Extra gradient behind the text column so the headline and body
+              copy have guaranteed contrast even over the brightest sky frame. */}
+          <div
+            className="absolute inset-x-0 bottom-0 h-[65%]"
+            style={{ background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.75) 70%, rgba(0,0,0,0.85))' }}
           />
         </div>
 
