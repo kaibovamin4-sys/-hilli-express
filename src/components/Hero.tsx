@@ -110,7 +110,7 @@ export default function Hero({ districts, district, status, districtGeo, onDistr
   return (
     <header
       id="top"
-      className="relative z-[1] px-6 md:px-12 lg:px-16 max-w-7xl mx-auto flex flex-col justify-end pb-12"
+      className="relative z-[1] px-6 md:px-12 lg:px-16 pr-[76px] md:pr-12 lg:pr-16 max-w-7xl mx-auto flex flex-col justify-end pb-12"
       style={{ minHeight: 'calc(100vh - 90px)' }}
     >
       <div className="flex flex-wrap items-center gap-2.5 mb-6">

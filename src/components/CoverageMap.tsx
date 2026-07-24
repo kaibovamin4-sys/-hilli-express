@@ -244,7 +244,7 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
       sub="Точки — сеть наших датчиков (MQ2/MQ4/MQ8). Контуры — официальные границы районов Алматы, закрашены по среднему PM2.5 датчиков внутри. Заштрихованные области — районы, где до ближайшего поста дальше 3,5 км: там официальных измерений фактически нет."
     >
       <div className="liquid-glass rounded-2xl p-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-1.5 pb-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1.5 pb-2.5">
           <span className="text-[13px] text-gray-400">
             {trafficTilesEnabled
               ? 'Пробки: весь город · TomTom'
@@ -252,7 +252,7 @@ export default function CoverageMap({ devices, districtGeo }: CoverageMapProps) 
           </span>
           <button
             onClick={() => setShowTraffic((v) => !v)}
-            className="text-[13px] whitespace-nowrap flex-none text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
+            className="text-[13px] self-start sm:self-auto whitespace-nowrap flex-none text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
           >
             {showTraffic ? 'Скрыть пробки' : 'Показать пробки'}
           </button>

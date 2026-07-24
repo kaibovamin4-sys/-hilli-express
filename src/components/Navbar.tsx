@@ -33,7 +33,7 @@ export default function Navbar({ statusColor }: NavbarProps) {
 
   return (
     <div className="sticky top-0 z-50 pt-4 md:pt-5 pb-2 px-4 md:px-12 lg:px-16">
-      <nav className="liquid-glass rounded-xl px-3.5 md:px-4 py-2.5 flex items-center justify-between gap-3 max-w-7xl mx-auto">
+      <nav className="liquid-glass liquid-glass--solid rounded-xl px-3.5 md:px-4 py-2.5 flex items-center justify-between gap-3 max-w-7xl mx-auto">
         <a
           href="#top"
           onClick={() => setOpen(false)}
@@ -90,7 +90,7 @@ export default function Navbar({ statusColor }: NavbarProps) {
 
       {open && (
         <div className="md:hidden mt-2 max-w-7xl mx-auto">
-          <div className="liquid-glass rounded-xl p-2">
+          <div className="liquid-glass liquid-glass--solid rounded-xl p-2">
             {LINKS.map((l) => (
               <a
                 key={l.href}

@@ -34,7 +34,7 @@ export default function Section({ id, eyebrow, title, sub, children }: SectionPr
     <section
       id={id}
       ref={ref}
-      className={`fade ${inView ? 'in' : ''} px-6 md:px-12 lg:px-16 max-w-7xl mx-auto pt-28`}
+      className={`fade ${inView ? 'in' : ''} px-6 md:px-12 lg:px-16 max-w-7xl mx-auto pt-28 pr-[76px] md:pr-12 lg:pr-16`}
     >
       <p className="text-[12.5px] tracking-[0.16em] uppercase text-[color:var(--muted)] mb-3">
         {eyebrow}
