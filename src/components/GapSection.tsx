@@ -34,6 +34,7 @@ export default function GapSection({ devices }: GapSectionProps) {
   const [anomalies, setAnomalies] = useState<AnomalyEvent[]>([]);
   const [officialName, setOfficialName] = useState('пост');
   const [localName, setLocalName] = useState('датчик');
+  const [loaded, setLoaded] = useState(false);
 
   // Pick two contrasting devices: current-lowest (reference "official post")
   // vs current-highest (local yard reading). Rank by latest aqi_composite.
@@ -54,6 +55,7 @@ export default function GapSection({ devices }: GapSectionProps) {
       void Promise.all([api.history(cleanest.id, 24), api.history(dirtiest.id, 24)]).then(([o, l]) => {
         setOfficial(fillGaps(toHourly(o)));
         setLocal(fillGaps(toHourly(l)));
+        setLoaded(true);
       });
     });
   }, [devices]);
@@ -89,6 +91,19 @@ export default function GapSection({ devices }: GapSectionProps) {
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_1.5fr]">
         <div className="liquid-glass rounded-2xl p-5 sm:p-7 flex flex-col justify-between gap-5">
+          {!loaded ? (
+            <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-3.5 animate-pulse">
+              <div>
+                <div className="h-[52px] sm:h-[68px] w-20 bg-white/10 rounded-lg" />
+                <div className="h-3 w-24 bg-white/10 rounded mt-3" />
+              </div>
+              <div className="text-[color:var(--muted)] text-sm pt-4">vs</div>
+              <div>
+                <div className="h-[52px] sm:h-[68px] w-20 bg-white/10 rounded-lg" />
+                <div className="h-3 w-28 bg-white/10 rounded mt-3" />
+              </div>
+            </div>
+          ) : (
           <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-3.5">
             <div>
               <div
@@ -114,9 +129,15 @@ export default function GapSection({ devices }: GapSectionProps) {
               </div>
             </div>
           </div>
+          )}
 
           <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)' }} />
 
+          {!loaded ? (
+            <p className="text-[15px] text-gray-400 leading-relaxed animate-pulse">
+              Загружаем свежие данные по датчикам…
+            </p>
+          ) : (
           <p className="text-[15px] text-gray-300 leading-relaxed">
             Пост: <b className="text-white font-semibold">{offNow}</b> · У нас:{' '}
             <b className="text-white font-semibold">{locNow}</b> — в{' '}
@@ -124,6 +145,7 @@ export default function GapSection({ devices }: GapSectionProps) {
             разница между «спокойно гуляем» и «ребёнку с астмой лучше остаться дома».
             Официальная цифра не ошибается — она просто измерена не там, где вы живёте.
           </p>
+          )}
         </div>
 
         <div className="liquid-glass rounded-2xl pt-6 px-6 pb-4">

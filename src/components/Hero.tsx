@@ -129,13 +129,15 @@ export default function Hero({ districts, district, status, districtGeo, onDistr
 
         <select
           aria-label="Выбор района"
-          className="rounded-[10px] px-3.5 py-2 pr-8 text-[13px] text-gray-300 border border-white/15 bg-white/[0.03] appearance-none cursor-pointer hover:border-white/35 transition-colors"
+          className="rounded-[10px] px-3.5 py-2 pr-8 text-[13px] text-gray-300 border border-white/15 bg-white/[0.03] appearance-none cursor-pointer hover:border-white/35 transition-colors disabled:opacity-50 disabled:cursor-default"
           value={district?.id ?? ''}
+          disabled={districts.length === 0}
           onChange={(e) => {
             const d = districts.find((x) => x.id === e.target.value);
             if (d) onDistrictChange(d);
           }}
         >
+          {districts.length === 0 && <option value="">Загружаем районы…</option>}
           {districts.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name} район
