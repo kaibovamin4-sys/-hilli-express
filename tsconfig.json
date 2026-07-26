@@ -3,6 +3,10 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    // Declares `*.css` side-effect imports and `import.meta.env`. Without it
+    // `tsc` fails on `import './index.css'`, and since the build script is
+    // `tsc && vite build`, the project could not be built at all.
+    "types": ["vite/client"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
