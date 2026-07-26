@@ -55,7 +55,7 @@ export default function Gauge({
           {label}
         </text>
       </svg>
-      {caption && <p className="text-[12px] text-[color:var(--muted)] text-center mt-1">{caption}</p>}
+      {caption && <p className="text-xs text-muted text-center mt-1">{caption}</p>}
     </div>
   );
 }

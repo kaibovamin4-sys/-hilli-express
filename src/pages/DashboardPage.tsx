@@ -15,7 +15,8 @@ import BarChart from '../components/charts/BarChart';
 import DonutChart from '../components/charts/DonutChart';
 import Heatmap from '../components/charts/Heatmap';
 import Sparkline from '../components/charts/Sparkline';
-import { AQI_BAD, AQI_GOOD, aqiColor, dayHour, hhmm, pmColorVar } from '../components/charts/primitives';
+import { AQI_BAD, AQI_GOOD, aqiBand, aqiColor, dayHour, hhmm, pmBand } from '../components/charts/primitives';
+import { BandLegend, BandMark } from '../components/ui/Band';
 
 const RANGES = [
   { days: 1, label: 'сутки' },
@@ -91,7 +92,7 @@ function AccuracyPanel({ days }: { days: number }) {
       action={<Chip color={truth ? 'var(--good)' : 'var(--mid)'}>{truth ? 'эталон' : 'модель'}</Chip>}
     >
       <p
-        className="text-[12.5px] leading-relaxed rounded-xl px-3.5 py-2.5 mb-4 border border-white/10 bg-white/[0.03]"
+        className="text-sm leading-relaxed rounded-xl px-3.5 py-2.5 mb-4 border border-line bg-fill"
         style={{ borderLeft: `3px solid ${truth ? 'var(--good)' : 'var(--mid)'}` }}
       >
         Сравнение с: <b>{sourceLabel}</b>.{' '}
@@ -308,7 +309,11 @@ export default function DashboardPage() {
             <Heatmap
               rows={data.hourly_profile.map((r) => ({ label: r.station, values: r.values }))}
               colorFor={aqiColor}
+              bandFor={aqiBand}
             />
+            <div className="mt-4">
+              <BandLegend metric="aqi" />
+            </div>
           </Panel>
 
           <div className="grid lg:grid-cols-2 gap-4">
@@ -352,16 +357,24 @@ export default function DashboardPage() {
           <AccuracyPanel days={days} />
 
           <Panel title="Станции" sub="Нажмите на строку, чтобы открыть станцию целиком.">
-            <div className="overflow-x-auto -mx-1 px-1">
-              <table className="w-full text-[13px] min-w-[620px]">
+            {/* Was `min-w-[Npx]` inside `overflow-x-auto`: on a phone the table was
+                  wider than the screen, scrolled sideways, and gave no sign
+                  that it did. Secondary columns now drop out below their
+                  breakpoint instead, so the table fits; `scroll-x` paints an
+                  edge shadow for the cases where it still overflows, and
+                  `scope`/`caption` give the remaining grid a structure a screen
+                  reader can navigate. */}
+            <div className="scroll-x -mx-1 px-1">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Станции сети: текущий и средний индекс, аптайм</caption>
                 <thead>
-                  <tr className="text-[color:var(--muted)] text-left">
-                    <th className="font-normal py-2">Станция</th>
-                    <th className="font-normal py-2 text-right">сейчас</th>
-                    <th className="font-normal py-2 text-right">среднее</th>
-                    <th className="font-normal py-2 text-right">мин / макс</th>
-                    <th className="font-normal py-2 text-right">аптайм</th>
-                    <th className="font-normal py-2 text-right">тренд</th>
+                  <tr className="text-muted text-left">
+                    <th scope="col" className="font-normal py-2">Станция</th>
+                    <th scope="col" className="font-normal py-2 text-right">сейчас</th>
+                    <th scope="col" className="font-normal py-2 text-right hidden sm:table-cell">среднее</th>
+                    <th scope="col" className="font-normal py-2 text-right hidden lg:table-cell">мин / макс</th>
+                    <th scope="col" className="font-normal py-2 text-right">аптайм</th>
+                    <th scope="col" className="font-normal py-2 text-right hidden md:table-cell">тренд</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -369,28 +382,29 @@ export default function DashboardPage() {
                     <tr
                       key={s.id}
                       onClick={() => navigate(`/stations/${encodeURIComponent(s.id)}`)}
-                      className="border-t border-white/[0.07] cursor-pointer hover:bg-white/[0.04] transition-colors"
+                      className="border-t border-line-soft cursor-pointer hover:bg-fill-hover transition-colors"
                     >
                       <td className="py-2.5">
                         <span className="inline-flex items-center gap-2">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{
-                              background:
-                                s.current_aqi == null ? 'var(--muted)' : aqiColor(s.current_aqi),
-                            }}
-                          />
+                          {s.current_aqi == null ? (
+                            <span
+                              className="w-2.5 h-2.5 rounded-full bg-muted shrink-0"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <BandMark band={aqiBand(s.current_aqi)} />
+                          )}
                           <span>
                             {s.name}
-                            <span className="block text-[11.5px] text-[color:var(--muted)]">
+                            <span className="block text-xs text-muted">
                               {s.district ?? '—'}
                             </span>
                           </span>
                         </span>
                       </td>
                       <td className="py-2.5 text-right tabular-nums">{s.current_aqi ?? '—'}</td>
-                      <td className="py-2.5 text-right tabular-nums">{s.avg_aqi ?? '—'}</td>
-                      <td className="py-2.5 text-right tabular-nums text-[color:var(--muted)]">
+                      <td className="py-2.5 text-right tabular-nums hidden sm:table-cell">{s.avg_aqi ?? '—'}</td>
+                      <td className="py-2.5 text-right tabular-nums text-muted hidden lg:table-cell">
                         {s.min_aqi ?? '—'} / {s.max_aqi ?? '—'}
                       </td>
                       <td
@@ -399,7 +413,7 @@ export default function DashboardPage() {
                       >
                         {Math.round(s.uptime * 100)}%
                       </td>
-                      <td className="py-2.5 text-right">
+                      <td className="py-2.5 text-right hidden md:table-cell">
                         <span className="inline-block align-middle">
                           <Sparkline
                             values={s.sparkline}
@@ -420,43 +434,46 @@ export default function DashboardPage() {
             title="Районы"
             sub="Отсортировано по сводному индексу — он берёт худшее из локального AQI-композита и внешнего PM2.5, поэтому порядок строк не всегда совпадает с колонкой PM2.5. Район без своей станции оценивается интерполяцией: уверенность ниже."
           >
-            <div className="overflow-x-auto -mx-1 px-1">
-              <table className="w-full text-[13px] min-w-[560px]">
+            <div className="scroll-x -mx-1 px-1">
+              <table className="w-full text-sm">
+                <caption className="sr-only">Районы: сводный индекс, PM2.5, уверенность оценки</caption>
                 <thead>
-                  <tr className="text-[color:var(--muted)] text-left">
-                    <th className="font-normal py-2">#</th>
-                    <th className="font-normal py-2">Район</th>
-                    <th className="font-normal py-2 text-right">Индекс</th>
-                    <th className="font-normal py-2 text-right">PM2.5</th>
-                    <th className="font-normal py-2 text-right">AQI</th>
-                    <th className="font-normal py-2 text-right">Уверенность</th>
-                    <th className="font-normal py-2 text-right">Своя станция</th>
+                  <tr className="text-muted text-left">
+                    <th scope="col" className="font-normal py-2">#</th>
+                    <th scope="col" className="font-normal py-2">Район</th>
+                    <th scope="col" className="font-normal py-2 text-right">Индекс</th>
+                    <th scope="col" className="font-normal py-2 text-right hidden sm:table-cell">PM2.5</th>
+                    <th scope="col" className="font-normal py-2 text-right hidden lg:table-cell">AQI</th>
+                    <th scope="col" className="font-normal py-2 text-right hidden md:table-cell">Уверенность</th>
+                    <th scope="col" className="font-normal py-2 text-right">Своя станция</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.districts.map((d, i) => (
-                    <tr key={d.district} className="border-t border-white/[0.07]">
-                      <td className="py-2 tabular-nums text-[color:var(--muted)]">{i + 1}</td>
+                    <tr key={d.district} className="border-t border-line-soft">
+                      <td className="py-2 tabular-nums text-muted">{i + 1}</td>
                       <td className="py-2">
                         <span className="inline-flex items-center gap-2">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{ background: pmColorVar(d.pm2_5 ?? d.score / 3) }}
-                          />
+                          {/* `score` is on the AQI-composite scale, so it is
+                              banded as AQI. The old code divided it by three to
+                              force it through the PM2.5 ramp, which happened to
+                              land in roughly the right colour and would have
+                              silently broken the moment either threshold moved. */}
+                          <BandMark band={d.pm2_5 != null ? pmBand(d.pm2_5) : aqiBand(d.score)} />
                           {d.district}
                         </span>
                       </td>
                       <td className="py-2 text-right tabular-nums">{d.score}</td>
-                      <td className="py-2 text-right tabular-nums">{d.pm2_5 ?? '—'}</td>
-                      <td className="py-2 text-right tabular-nums">{d.aqi_composite}</td>
-                      <td className="py-2 text-right tabular-nums text-[color:var(--muted)]">
+                      <td className="py-2 text-right tabular-nums hidden sm:table-cell">{d.pm2_5 ?? '—'}</td>
+                      <td className="py-2 text-right tabular-nums hidden lg:table-cell">{d.aqi_composite}</td>
+                      <td className="py-2 text-right tabular-nums text-muted hidden md:table-cell">
                         {Math.round(d.confidence * 100)}%
                       </td>
                       <td className="py-2 text-right">
                         {d.has_own_station ? (
                           <span style={{ color: 'var(--good)' }}>есть</span>
                         ) : (
-                          <span className="text-[color:var(--muted)]">нет</span>
+                          <span className="text-muted">нет</span>
                         )}
                       </td>
                     </tr>
@@ -472,11 +489,11 @@ export default function DashboardPage() {
                 {data.anomalies.map((a, i) => (
                   <li
                     key={`${a.device_id}-${a.ts_start}-${i}`}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-[12.5px]"
+                    className="rounded-xl border border-line bg-fill px-3.5 py-2.5 text-sm"
                     style={{ borderLeft: `3px solid ${a.severity > 3 ? 'var(--bad)' : 'var(--mid)'}` }}
                   >
                     <span className="text-gray-200">{a.device_id}</span> · {a.metric}
-                    <span className="block text-[color:var(--muted)]">
+                    <span className="block text-muted">
                       {dayHour(a.ts_start)} — пик {Math.round(a.peak_value)}, сила{' '}
                       {Math.round(a.severity * 10) / 10}σ
                     </span>
@@ -486,7 +503,7 @@ export default function DashboardPage() {
             </Panel>
           )}
 
-          <p className="text-[11.5px] text-[color:var(--muted)] px-1">
+          <p className="text-xs text-muted px-1">
             Обновлено {new Date(data.generated_at).toLocaleString('ru-RU')} · окно {data.window_days} дн.
           </p>
         </>

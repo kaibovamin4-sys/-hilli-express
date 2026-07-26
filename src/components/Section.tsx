@@ -31,21 +31,16 @@ export default function Section({ id, eyebrow, title, sub, children }: SectionPr
   }, []);
 
   return (
-    <section
-      id={id}
-      ref={ref}
-      className={`fade ${inView ? 'in' : ''} px-6 md:px-12 lg:px-16 max-w-7xl mx-auto pt-36 md:pt-28`}
-    >
-      <p className="text-[12.5px] tracking-[0.16em] uppercase text-[color:var(--muted)] mb-3">
-        {eyebrow}
-      </p>
-      <h2
-        className="font-normal leading-[1.06] mb-4"
-        style={{ letterSpacing: '-0.035em', fontSize: 'clamp(34px, 4.6vw, 60px)' }}
-      >
-        {title}
-      </h2>
-      {sub && <p className="text-gray-400 text-base max-w-2xl mb-8">{sub}</p>}
+    // Rhythm now matches the rest of the app instead of the old standalone
+    // landing: no horizontal padding of its own (the shell already provides
+    // it), section spacing on the same 4/8 grid the panels use, and the
+    // heading on the shared display scale — one step below the page <h1>
+    // rather than half again larger than it, which is what made /about read
+    // like a different product.
+    <section id={id} ref={ref} className={`fade ${inView ? 'in' : ''} pt-12 md:pt-14`}>
+      <p className="text-2xs tracking-[0.16em] uppercase text-muted mb-2.5">{eyebrow}</p>
+      <h2 className="fs-section font-normal mb-3">{title}</h2>
+      {sub && <p className="text-gray-400 text-base max-w-2xl mb-6">{sub}</p>}
       {children}
     </section>
   );

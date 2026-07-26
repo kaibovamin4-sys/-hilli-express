@@ -43,7 +43,7 @@ function Screen() {
 function NotFound() {
   return (
     <div className="liquid-glass rounded-2xl p-8 text-center">
-      <p className="text-[15px] mb-3">Такого экрана нет.</p>
+      <p className="text-md mb-3">Такого экрана нет.</p>
       <button
         type="button"
         onClick={() => navigate('/')}
@@ -78,7 +78,7 @@ function Shell() {
         </main>
 
         <footer className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 mt-6">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-[color:var(--muted)]">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
             <button type="button" onClick={() => navigate('/about')} className="hover:text-white transition-colors">
               О проекте
             </button>

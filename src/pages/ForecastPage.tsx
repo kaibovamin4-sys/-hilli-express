@@ -66,7 +66,7 @@ export default function ForecastPage() {
         <>
           {data.fallback && (
             <div
-              className="liquid-glass rounded-2xl p-4 text-[13px] leading-relaxed"
+              className="liquid-glass rounded-2xl p-4 text-sm leading-relaxed"
               style={{ borderLeft: '3px solid var(--mid)' }}
             >
               <b>Показан резервный прогноз</b> (экспоненциальное сглаживание Хольта + Open-Meteo).
@@ -152,16 +152,16 @@ export default function ForecastPage() {
                 return (
                   <div
                     key={p.ts}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] p-3"
+                    className="rounded-xl border border-line bg-fill p-3"
                     style={{ borderTop: `2px solid ${copy.cssVar}` }}
                   >
-                    <p className="text-[12px] text-[color:var(--muted)]">
+                    <p className="text-xs text-muted">
                       {hhmm(p.ts)} · +{p.horizon} ч
                     </p>
-                    <p className="text-[22px] leading-tight tabular-nums" style={{ color: copy.cssVar }}>
+                    <p className="text-xl leading-tight tabular-nums" style={{ color: copy.cssVar }}>
                       {p.aqi}
                     </p>
-                    <p className="text-[11.5px] text-[color:var(--muted)] leading-snug">
+                    <p className="text-xs text-muted leading-snug">
                       PM2.5 ≈ {p.pm25}
                       <br />
                       ±{p.aqi_high - p.aqi} · увер. {Math.round(p.confidence * 100)}%
@@ -189,24 +189,25 @@ export default function ForecastPage() {
                     sub: `база ${a.baseline_mae}`,
                   }))}
                 />
-                <div className="overflow-x-auto mt-3 -mx-1 px-1">
-                  <table className="w-full text-[12.5px] min-w-[420px]">
+                <div className="scroll-x mt-3 -mx-1 px-1">
+                  <table className="w-full text-sm">
+                    <caption className="sr-only">Точность модели по горизонтам прогноза</caption>
                     <thead>
-                      <tr className="text-[color:var(--muted)] text-left">
-                        <th className="font-normal py-1.5">Горизонт</th>
-                        <th className="font-normal py-1.5 text-right">MAE</th>
-                        <th className="font-normal py-1.5 text-right">RMSE</th>
-                        <th className="font-normal py-1.5 text-right">R²</th>
-                        <th className="font-normal py-1.5 text-right">vs база</th>
+                      <tr className="text-muted text-left">
+                        <th scope="col" className="font-normal py-1.5">Горизонт</th>
+                        <th scope="col" className="font-normal py-1.5 text-right">MAE</th>
+                        <th scope="col" className="font-normal py-1.5 text-right hidden sm:table-cell">RMSE</th>
+                        <th scope="col" className="font-normal py-1.5 text-right hidden sm:table-cell">R²</th>
+                        <th scope="col" className="font-normal py-1.5 text-right">vs база</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.model.accuracy.map((a) => (
-                        <tr key={a.horizon} className="border-t border-white/[0.07]">
+                        <tr key={a.horizon} className="border-t border-line-soft">
                           <td className="py-1.5">+{a.horizon} ч</td>
                           <td className="py-1.5 text-right tabular-nums">{a.mae}</td>
-                          <td className="py-1.5 text-right tabular-nums">{a.rmse}</td>
-                          <td className="py-1.5 text-right tabular-nums">{a.r2}</td>
+                          <td className="py-1.5 text-right tabular-nums hidden sm:table-cell">{a.rmse}</td>
+                          <td className="py-1.5 text-right tabular-nums hidden sm:table-cell">{a.r2}</td>
                           <td
                             className="py-1.5 text-right tabular-nums"
                             style={{
@@ -241,8 +242,8 @@ export default function ForecastPage() {
           )}
 
           <Panel title="Как устроена модель">
-            <p className="text-[13px] text-gray-300 leading-relaxed mb-3">{data.model.method}</p>
-            <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2.5 text-[12.5px]">
+            <p className="text-sm text-gray-300 leading-relaxed mb-3">{data.model.method}</p>
+            <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2.5 text-sm">
               <Fact label="Станция-опора" value={`${data.anchor.station} · ${data.anchor.distance_km} км`} />
               <Fact
                 label="Обучена"
@@ -264,7 +265,7 @@ export default function ForecastPage() {
                 </>
               )}
             </dl>
-            <p className="text-[11.5px] text-[color:var(--muted)] leading-relaxed mt-3.5">
+            <p className="text-xs text-muted leading-relaxed mt-3.5">
               Валидация — по времени, а не случайная: последние 25 % часов исключены из обучения
               целиком. Случайное перемешивание подмешало бы соседние часы целевого и дало бы
               заниженную ошибку, которую живой прогноз не смог бы повторить.
@@ -279,7 +280,7 @@ export default function ForecastPage() {
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[color:var(--muted)]">{label}</dt>
+      <dt className="text-muted">{label}</dt>
       <dd className="text-gray-200 mt-0.5">{value}</dd>
     </div>
   );

@@ -60,7 +60,7 @@ export default function PlacePicker({ compact = false }: PlacePickerProps) {
                 setPlace({ kind: 'district', label: d.name, lat: d.lat, lng: d.lng, districtId: d.id });
               }
             }}
-            className="w-full bg-white/[0.05] border border-white/15 rounded-xl px-3.5 py-2.5 text-[14px] outline-none focus:border-white/35 transition-colors"
+            className="w-full bg-fill border border-line rounded-xl px-3.5 py-2.5 text-base transition-colors"
           >
             <option value="">
               {place && place.kind !== 'district' ? place.label : 'Выберите район'}
@@ -77,7 +77,7 @@ export default function PlacePicker({ compact = false }: PlacePickerProps) {
           type="button"
           onClick={() => void locate()}
           disabled={locating}
-          className="shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/15 bg-white/[0.05] text-[13.5px] hover:bg-white/[0.09] disabled:opacity-50 transition-colors"
+          className="shrink-0 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-line bg-fill text-base hover:bg-fill-hover disabled:opacity-50 transition-colors"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.7">
             <circle cx="12" cy="12" r="3.2" />
@@ -92,13 +92,13 @@ export default function PlacePicker({ compact = false }: PlacePickerProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Свой адрес: Абая 150, Алматы"
-          className="flex-1 min-w-0 bg-white/[0.05] border border-white/15 rounded-xl px-3.5 py-2.5 text-[14px] outline-none focus:border-white/35 transition-colors placeholder:text-[color:var(--muted)]"
+          className="flex-1 min-w-0 bg-fill border border-line rounded-xl px-3.5 py-2.5 text-base transition-colors placeholder:text-muted"
           aria-label="Адрес"
         />
         <button
           type="submit"
           disabled={searching}
-          className="shrink-0 bg-white text-black px-4 py-2.5 rounded-xl text-[13.5px] font-medium hover:bg-gray-100 disabled:opacity-50 transition-colors"
+          className="shrink-0 bg-white text-black px-4 py-2.5 rounded-xl text-base font-medium hover:bg-gray-100 disabled:opacity-50 transition-colors"
         >
           {searching ? '…' : 'Проверить'}
         </button>
@@ -106,11 +106,11 @@ export default function PlacePicker({ compact = false }: PlacePickerProps) {
 
       {!compact && (
         <label className="flex items-center gap-2.5">
-          <span className="text-[12.5px] text-[color:var(--muted)] shrink-0">Для кого:</span>
+          <span className="text-sm text-muted shrink-0">Для кого:</span>
           <select
             value={profile}
             onChange={(e) => setProfile(e.target.value as Profile)}
-            className="flex-1 bg-white/[0.05] border border-white/15 rounded-xl px-3 py-2 text-[13.5px] outline-none focus:border-white/35 transition-colors"
+            className="flex-1 bg-fill border border-line rounded-xl px-3 py-2 text-base transition-colors"
           >
             {(Object.keys(PROFILE_LABELS) as Profile[]).map((p) => (
               <option key={p} value={p}>
@@ -122,11 +122,11 @@ export default function PlacePicker({ compact = false }: PlacePickerProps) {
       )}
 
       {(error || locateError) && (
-        <p className="text-[12.5px] text-[color:var(--bad)]">{error ?? locateError}</p>
+        <p className="text-sm text-bad">{error ?? locateError}</p>
       )}
 
       {result && (
-        <div className="text-[12.5px] text-[color:var(--muted)] leading-relaxed">
+        <div className="text-sm text-muted leading-relaxed">
           <span className="text-gray-300">{shortAddress(result.address)}</span> — {result.status_reason}.
           Безопасно на улице примерно <b className="text-gray-200">{result.max_safe_duration_min} мин</b>.
           {result.alternatives.length > 0 && (

@@ -14,7 +14,7 @@ interface SparklineProps {
 
 export default function Sparkline({ values, color, width = 110, height = 30, fill = true }: SparklineProps) {
   if (values.length < 2) {
-    return <span className="text-[color:var(--muted)] text-[11px]">—</span>;
+    return <span className="text-muted text-2xs">—</span>;
   }
   const min = Math.min(...values);
   const max = Math.max(...values);

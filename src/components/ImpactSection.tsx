@@ -38,14 +38,9 @@ export default function ImpactSection() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         {STATS.map((s) => (
           <div key={s.value} className="liquid-glass rounded-2xl p-6 flex flex-col">
-            <div
-              className="font-light leading-none mb-3"
-              style={{ fontSize: 'clamp(38px, 4vw, 56px)', letterSpacing: '-0.03em', color: 'var(--bad)' }}
-            >
-              {s.value}
-            </div>
-            <p className="text-[14px] text-gray-300 leading-snug flex-1">{s.label}</p>
-            <p className="text-[11.5px] text-[color:var(--muted)] mt-3 pt-3 border-t border-white/10">
+            <div className="fs-metric font-light mb-3 text-bad">{s.value}</div>
+            <p className="text-base text-gray-300 leading-snug flex-1">{s.label}</p>
+            <p className="text-xs text-muted mt-3 pt-3 border-t border-line">
               {s.source}
             </p>
           </div>
@@ -53,7 +48,7 @@ export default function ImpactSection() {
       </div>
 
       <div className="liquid-glass rounded-2xl p-7" style={{ borderLeft: '2px solid var(--status-c, var(--mid))' }}>
-        <p className="text-[15.5px] text-gray-300 leading-relaxed max-w-3xl">
+        <p className="text-md text-gray-300 leading-relaxed max-w-3xl">
           Проблема не в том, что данных о воздухе нет — а в том, что они измерены{' '}
           <b className="text-white">не там, где гуляет ваш ребёнок</b>, и написаны языком,
           который не отвечает на единственный важный вопрос. AUA переводит датчики, модели

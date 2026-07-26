@@ -94,12 +94,12 @@ function StationList() {
                 key={s.id}
                 type="button"
                 onClick={() => navigate(`/stations/${encodeURIComponent(s.id)}`)}
-                className="liquid-glass rounded-2xl p-4 text-left hover:bg-white/[0.04] transition-colors"
+                className="liquid-glass rounded-2xl p-4 text-left hover:bg-fill-hover transition-colors"
                 style={{ borderTop: `2px solid ${color}` }}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0">
-                    <p className="text-[15px] truncate flex items-center gap-1.5">
+                    <p className="text-md truncate flex items-center gap-1.5">
                       {s.name}
                       {s.led !== 'off' && (
                         <span
@@ -112,13 +112,13 @@ function StationList() {
                         />
                       )}
                     </p>
-                    <p className="text-[12px] text-[color:var(--muted)] truncate">
+                    <p className="text-xs text-muted truncate">
                       {s.district ?? '—'} · {s.sensor_kind === 'mq135' ? 'MQ-135' : 'MQ2/MQ4/MQ8'}
                       {s.climate ? ' + DHT22' : ''}
                     </p>
                   </div>
                   <span
-                    className="shrink-0 text-[11px] px-2 py-1 rounded-full"
+                    className="shrink-0 text-2xs px-2 py-1 rounded-full"
                     style={{
                       color: s.online ? 'var(--good)' : 'var(--muted)',
                       background: s.online ? 'var(--good-dim)' : 'rgba(255,255,255,0.05)',
@@ -130,20 +130,20 @@ function StationList() {
 
                 <div className="flex items-end gap-4 mb-2.5">
                   <div>
-                    <p className="text-[28px] leading-none tabular-nums" style={{ color }}>
+                    <p className="text-3xl leading-none tabular-nums" style={{ color }}>
                       {s.reading ? s.reading.aqi_composite : '—'}
                     </p>
-                    <p className="text-[11px] text-[color:var(--muted)] mt-1">AQI-композит</p>
+                    <p className="text-2xs text-muted mt-1">AQI-композит</p>
                   </div>
                   {s.climate && (
-                    <div className="text-[12.5px] text-gray-300 leading-tight">
+                    <div className="text-sm text-gray-300 leading-tight">
                       <p>{s.climate.temp_c} °C</p>
-                      <p className="text-[color:var(--muted)]">{s.climate.humidity}% влажн.</p>
+                      <p className="text-muted">{s.climate.humidity}% влажн.</p>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between gap-2 text-[11.5px] text-[color:var(--muted)]">
+                <div className="flex items-center justify-between gap-2 text-xs text-muted">
                   <span
                     style={{ color: s.is_demo ? 'var(--mid)' : 'var(--good)' }}
                     title={s.is_demo ? 'Данные генерирует модель' : 'Физическая станция'}
@@ -315,7 +315,7 @@ function StationDetailView({ id }: { id: string }) {
               />
             </div>
             <p
-              className="text-[13px] leading-relaxed rounded-xl px-3.5 py-3 border border-white/10 bg-white/[0.03]"
+              className="text-sm leading-relaxed rounded-xl px-3.5 py-3 border border-line bg-fill"
               style={{ borderLeft: '3px solid var(--status-c)' }}
             >
               <b>{climate.comfort}</b> — {climate.comfort_note}
@@ -416,7 +416,7 @@ function StationDetailView({ id }: { id: string }) {
           />
           {reading?.breakdown && (
             <div className="mt-4">
-              <p className="text-[12.5px] text-[color:var(--muted)] mb-2">
+              <p className="text-sm text-muted mb-2">
                 Вклад в композит сейчас
                 {reading.breakdown.dominant
                   ? ` (итог — максимум, ведущий канал: ${channelLabel(reading.breakdown.dominant)})`
@@ -458,7 +458,7 @@ function StationDetailView({ id }: { id: string }) {
                     { label: 'Стабильность базы', value: health.factors.drift * 100, color: 'var(--mid)' },
                   ]}
                 />
-                <p className="text-[12px] text-[color:var(--muted)] mt-2.5">
+                <p className="text-xs text-muted mt-2.5">
                   Данные есть за {health.hours_with_data} из {health.hours_expected} часов ·{' '}
                   {health.packets_24h} пакетов за сутки
                   {health.neighbor_deviation_aqi != null &&
@@ -467,7 +467,7 @@ function StationDetailView({ id }: { id: string }) {
                 {health.hints.length > 0 && (
                   <ul className="mt-2 flex flex-col gap-1">
                     {health.hints.map((h) => (
-                      <li key={h} className="text-[12px] text-[color:var(--mid)] leading-relaxed">
+                      <li key={h} className="text-xs text-[color:var(--mid)] leading-relaxed">
                         · {h}
                       </li>
                     ))}
@@ -481,7 +481,7 @@ function StationDetailView({ id }: { id: string }) {
         </Panel>
 
         <Panel title="Железо и калибровка">
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[12.5px]">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
             <Fact label="Плата" value={station.hardware.board} />
             <Fact label="Газовые сенсоры" value={station.hardware.gas_sensors.join(' / ')} />
             <Fact
@@ -507,7 +507,7 @@ function StationDetailView({ id }: { id: string }) {
 
           {data.raw_adc && (
             <>
-              <p className="text-[12.5px] text-[color:var(--muted)] mt-4 mb-2">
+              <p className="text-sm text-muted mt-4 mb-2">
                 Сырые значения АЦП последнего пакета (0–1023)
               </p>
               <BarChart
@@ -526,16 +526,17 @@ function StationDetailView({ id }: { id: string }) {
       {/* Stats + anomalies */}
       <div className="grid lg:grid-cols-2 gap-4">
         <Panel title={`Сводка за ${hours} ч`}>
-          <div className="overflow-x-auto -mx-1 px-1">
-            <table className="w-full text-[13px] min-w-[380px]">
+          <div className="scroll-x -mx-1 px-1">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Сводка по метрикам станции за выбранный период</caption>
               <thead>
-                <tr className="text-[color:var(--muted)] text-left">
-                  <th className="font-normal py-2">Метрика</th>
-                  <th className="font-normal py-2 text-right">мин</th>
-                  <th className="font-normal py-2 text-right">сред</th>
-                  <th className="font-normal py-2 text-right">медиана</th>
-                  <th className="font-normal py-2 text-right">макс</th>
-                  <th className="font-normal py-2 text-right">тренд</th>
+                <tr className="text-muted text-left">
+                  <th scope="col" className="font-normal py-2">Метрика</th>
+                  <th scope="col" className="font-normal py-2 text-right">мин</th>
+                  <th scope="col" className="font-normal py-2 text-right">сред</th>
+                  <th scope="col" className="font-normal py-2 text-right hidden sm:table-cell">медиана</th>
+                  <th scope="col" className="font-normal py-2 text-right">макс</th>
+                  <th scope="col" className="font-normal py-2 text-right hidden md:table-cell">тренд</th>
                 </tr>
               </thead>
               <tbody>
@@ -570,11 +571,11 @@ function StationDetailView({ id }: { id: string }) {
               {data.anomalies.map((a, i) => (
                 <li
                   key={`${a.ts_start}-${i}`}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-[12.5px]"
+                  className="rounded-xl border border-line bg-fill px-3.5 py-2.5 text-sm"
                   style={{ borderLeft: `3px solid ${a.severity > 3 ? 'var(--bad)' : 'var(--mid)'}` }}
                 >
                   <span className="text-gray-200">{a.metric}</span> ·{' '}
-                  <span className="text-[color:var(--muted)]">
+                  <span className="text-muted">
                     {hhmm(a.ts_start)}–{hhmm(a.ts_end)}, пик {Math.round(a.peak_value)}, сила{' '}
                     {Math.round(a.severity * 10) / 10}σ
                   </span>
@@ -610,7 +611,7 @@ function BackLink() {
     <button
       type="button"
       onClick={() => navigate('/stations')}
-      className="self-start text-[13px] text-gray-300 hover:text-white transition-colors"
+      className="self-start text-sm text-gray-300 hover:text-white transition-colors"
     >
       ← Все станции
     </button>
@@ -619,10 +620,10 @@ function BackLink() {
 
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3">
-      <p className="text-[11px] uppercase tracking-[0.08em] text-[color:var(--muted)]">{label}</p>
-      <p className="text-[19px] leading-tight mt-1 tabular-nums">{value}</p>
-      {hint && <p className="text-[11px] text-[color:var(--muted)] mt-1 leading-snug">{hint}</p>}
+    <div className="rounded-xl border border-line bg-fill px-3.5 py-3">
+      <p className="text-2xs uppercase tracking-[0.08em] text-muted">{label}</p>
+      <p className="text-xl leading-tight mt-1 tabular-nums">{value}</p>
+      {hint && <p className="text-2xs text-muted mt-1 leading-snug">{hint}</p>}
     </div>
   );
 }
@@ -630,7 +631,7 @@ function Metric({ label, value, hint }: { label: string; value: string; hint?: s
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[color:var(--muted)]">{label}</dt>
+      <dt className="text-muted">{label}</dt>
       <dd className="text-gray-200 mt-0.5">{value}</dd>
     </div>
   );
@@ -648,13 +649,13 @@ function StatRow({
   color: string;
 }) {
   return (
-    <tr className="border-t border-white/[0.07]">
+    <tr className="border-t border-line-soft">
       <td className="py-2">{label}</td>
       <td className="py-2 text-right tabular-nums">{agg?.min ?? '—'}</td>
       <td className="py-2 text-right tabular-nums">{agg?.avg ?? '—'}</td>
-      <td className="py-2 text-right tabular-nums">{agg?.median ?? '—'}</td>
+      <td className="py-2 text-right tabular-nums hidden sm:table-cell">{agg?.median ?? '—'}</td>
       <td className="py-2 text-right tabular-nums">{agg?.max ?? '—'}</td>
-      <td className="py-2 text-right">
+      <td className="py-2 text-right hidden md:table-cell">
         <span className="inline-block align-middle">
           <Sparkline values={spark} color={color} width={90} height={26} />
         </span>

@@ -21,12 +21,12 @@ function relativeTime(ts: string): string {
 
 function Metric({ label, value, unit, accent }: { label: string; value: string; unit?: string; accent?: string }) {
   return (
-    <div className="rounded-[8px] bg-white/[0.04] px-4 py-3">
-      <div className="text-[28px] leading-none font-light" style={{ color: accent ?? '#fff' }}>
+    <div className="rounded-lg bg-fill px-4 py-3">
+      <div className="text-3xl leading-none font-light" style={{ color: accent ?? '#fff' }}>
         {value}
-        {unit && <span className="text-[13px] text-[color:var(--muted)] ml-1">{unit}</span>}
+        {unit && <span className="text-sm text-muted ml-1">{unit}</span>}
       </div>
-      <div className="text-[12px] text-[color:var(--muted)] mt-1.5">{label}</div>
+      <div className="text-xs text-muted mt-1.5">{label}</div>
     </div>
   );
 }
@@ -73,20 +73,20 @@ export default function AirSensorSection() {
           <div>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: error ? 'var(--bad)' : latest ? 'var(--good)' : 'var(--muted)' }} />
-              <span className="text-[13px] text-gray-300">
+              <span className="text-sm text-gray-300">
                 {error ? 'API недоступен' : latest ? `обновлено ${seen}` : loading ? 'загружаем данные' : 'данных пока нет'}
               </span>
             </div>
-            <h3 className="text-[18px] font-medium text-white">
+            <h3 className="text-lg font-medium text-white">
               {latest?.location ?? 'Almaty, Auezov, 12 mkr'}
             </h3>
-            <p className="text-[12.5px] text-[color:var(--muted)] mt-1">
+            <p className="text-sm text-muted mt-1">
               topic: almaty/auezov/mkr12/station1/air
             </p>
           </div>
 
           {latest && (
-            <div className="rounded-[8px] border border-white/10 px-4 py-2 text-[13px]" style={{ color: accent }}>
+            <div className="rounded-lg border border-line px-4 py-2 text-sm" style={{ color: accent }}>
               {latest.status}
             </div>
           )}

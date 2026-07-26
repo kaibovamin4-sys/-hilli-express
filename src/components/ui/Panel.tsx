@@ -20,8 +20,8 @@ export function Panel({ title, sub, action, children, className = '', id }: Pane
       {(title || action) && (
         <header className="flex items-start justify-between gap-3 mb-3.5">
           <div className="min-w-0">
-            {title && <h2 className="text-[15px] sm:text-base font-medium leading-snug">{title}</h2>}
-            {sub && <p className="text-[12.5px] text-[color:var(--muted)] mt-1 leading-relaxed">{sub}</p>}
+            {title && <h2 className="text-md sm:text-base font-medium leading-snug">{title}</h2>}
+            {sub && <p className="text-sm text-muted mt-1 leading-relaxed">{sub}</p>}
           </div>
           {action && <div className="shrink-0">{action}</div>}
         </header>
@@ -43,22 +43,22 @@ interface StatTileProps {
 export function StatTile({ label, value, unit, hint, color, trend }: StatTileProps) {
   return (
     <div className="liquid-glass rounded-xl p-3.5 flex flex-col gap-1">
-      <span className="text-[11.5px] uppercase tracking-[0.1em] text-[color:var(--muted)]">{label}</span>
-      <span className="text-[26px] leading-none font-medium tabular-nums" style={color ? { color } : undefined}>
+      <span className="text-xs uppercase tracking-[0.1em] text-muted">{label}</span>
+      <span className="text-2xl leading-none font-medium tabular-nums" style={color ? { color } : undefined}>
         {value}
-        {unit && <span className="text-[14px] text-[color:var(--muted)] ml-1">{unit}</span>}
+        {unit && <span className="text-base text-muted ml-1">{unit}</span>}
       </span>
       {trend != null && (
         // Cleaner air is the good direction, so a falling number is green —
         // the opposite of the usual "up is good" convention.
         <span
-          className="text-[12px] tabular-nums"
+          className="text-xs tabular-nums"
           style={{ color: trend > 0 ? 'var(--bad)' : trend < 0 ? 'var(--good)' : 'var(--muted)' }}
         >
           {trend > 0 ? '↑' : trend < 0 ? '↓' : '→'} {Math.abs(trend)}% за сутки
         </span>
       )}
-      {hint && <span className="text-[12px] text-[color:var(--muted)] leading-snug">{hint}</span>}
+      {hint && <span className="text-xs text-muted leading-snug">{hint}</span>}
     </div>
   );
 }
@@ -73,14 +73,9 @@ interface PageHeaderProps {
 export function PageHeader({ eyebrow, title, sub, children }: PageHeaderProps) {
   return (
     <header className="mb-5">
-      <p className="text-[11.5px] tracking-[0.16em] uppercase text-[color:var(--muted)] mb-2">{eyebrow}</p>
-      <h1
-        className="font-normal leading-[1.08] mb-2"
-        style={{ letterSpacing: '-0.03em', fontSize: 'clamp(28px, 4.2vw, 44px)' }}
-      >
-        {title}
-      </h1>
-      {sub && <p className="text-gray-400 text-[14.5px] max-w-2xl leading-relaxed">{sub}</p>}
+      <p className="text-xs tracking-[0.16em] uppercase text-muted mb-2">{eyebrow}</p>
+      <h1 className="fs-page font-normal mb-2">{title}</h1>
+      {sub && <p className="text-gray-400 text-base max-w-2xl leading-relaxed">{sub}</p>}
       {children}
     </header>
   );
@@ -99,13 +94,25 @@ export function Chip({
   active?: boolean;
   title?: string;
 }) {
+  // 30px tall is the right visual weight for a filter row, but it is under
+  // both Apple's 44pt and Material's 48dp minimum — and on the map screen
+  // these chips are the primary interaction. `tap-target` grows the hit area
+  // to 44x44 with a centred pseudo-element, so the chip stays the same size on
+  // screen and becomes reliably tappable. Static chips are labels, not
+  // controls, so they do not get it.
   const cls =
-    'inline-flex items-center gap-2 text-[12.5px] rounded-full px-3.5 py-1.5 border transition-colors ' +
+    'inline-flex items-center gap-2 text-sm rounded-full px-3.5 py-1.5 border transition-colors ' +
     (active
-      ? 'border-white/35 bg-white/[0.12] text-white'
-      : 'border-white/15 bg-white/[0.03] text-gray-300 hover:bg-white/[0.07]');
+      ? 'border-line-strong bg-fill-active text-white'
+      : 'border-line bg-fill text-gray-300 hover:bg-fill-hover');
   return onClick ? (
-    <button type="button" onClick={onClick} className={cls} title={title}>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`${cls} tap-target cursor-pointer`}
+      title={title}
+    >
       {color && <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />}
       {children}
     </button>
@@ -123,7 +130,7 @@ export function Skeleton({ lines = 3, className = '' }: { lines?: number; classN
       {Array.from({ length: lines }, (_, i) => (
         <div
           key={i}
-          className="h-3.5 rounded bg-white/[0.06]"
+          className="h-3.5 rounded bg-fill-hover"
           style={{ width: `${100 - i * 12}%` }}
         />
       ))}
@@ -132,5 +139,5 @@ export function Skeleton({ lines = 3, className = '' }: { lines?: number; classN
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-[color:var(--muted)] py-6 text-center">{children}</p>;
+  return <p className="text-sm text-muted py-6 text-center">{children}</p>;
 }

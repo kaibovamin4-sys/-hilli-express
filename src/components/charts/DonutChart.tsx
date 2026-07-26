@@ -63,7 +63,7 @@ export default function DonutChart({ slices, centerValue, centerLabel, size = 20
 
       <ul className="flex-1 w-full flex flex-col gap-2">
         {slices.map((s) => (
-          <li key={s.label} className="flex items-center gap-2.5 text-[13px]">
+          <li key={s.label} className="flex items-center gap-2.5 text-sm">
             <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: s.color }} />
             <span className="flex-1 text-gray-300">{s.label}</span>
             <b className="tabular-nums">{total > 0 ? Math.round((s.value / total) * 100) : 0}%</b>

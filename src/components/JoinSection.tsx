@@ -47,25 +47,25 @@ export default function JoinSection() {
         <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
           <div className="flex flex-wrap gap-x-8 gap-y-4">
             <div>
-              <div className="font-light leading-none" style={{ fontSize: 'clamp(40px, 5vw, 64px)', letterSpacing: '-0.04em', color: 'var(--good)' }}>
-                ~{coverage.radius}<span className="text-[18px] text-[color:var(--muted)] ml-1">км</span>
+              <div className="fs-metric font-light" style={{ color: 'var(--good)' }}>
+                ~{coverage.radius}<span className="text-lg text-muted ml-1">км</span>
               </div>
-              <div className="text-[12.5px] text-[color:var(--muted)] mt-1.5">радиус одной станции</div>
+              <div className="text-sm text-muted mt-1.5">радиус одной станции</div>
             </div>
             <div>
-              <div className="font-light leading-none" style={{ fontSize: 'clamp(40px, 5vw, 64px)', letterSpacing: '-0.04em' }}>
-                ~{diameter}<span className="text-[18px] text-[color:var(--muted)] ml-1">км</span>
+              <div className="fs-metric font-light">
+                ~{diameter}<span className="text-lg text-muted ml-1">км</span>
               </div>
-              <div className="text-[12.5px] text-[color:var(--muted)] mt-1.5">диаметр зоны · ≈ {area} км²</div>
+              <div className="text-sm text-muted mt-1.5">диаметр зоны · ≈ {area} км²</div>
             </div>
             <div>
-              <div className="font-light leading-none" style={{ fontSize: 'clamp(40px, 5vw, 64px)', letterSpacing: '-0.04em', color: 'var(--status-c, var(--mid))' }}>
+              <div className="fs-metric font-light" style={{ color: 'var(--status-c, var(--mid))' }}>
                 {coverage.total90}
               </div>
-              <div className="text-[12.5px] text-[color:var(--muted)] mt-1.5">станций → 90 % города</div>
+              <div className="text-sm text-muted mt-1.5">станций → 90 % города</div>
             </div>
           </div>
-          <p className="text-[13.5px] text-gray-400 leading-relaxed md:border-l md:border-white/10 md:pl-6">
+          <p className="text-base text-gray-400 leading-relaxed md:border-l md:border-line md:pl-6">
             Одна станция «видит» не только свою точку: гауссова fusion-модель распространяет её
             поправку к городскому фону PM2.5 с масштабом 3 км, сохраняя значимый вес до ~{coverage.radius} км.
             Так один датчик закрывает пятно ~{diameter} км в поперечнике — это половина жилого района.
@@ -78,22 +78,19 @@ export default function JoinSection() {
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         {STEPS.map((s) => (
           <div key={s.n} className="liquid-glass rounded-2xl p-7">
-            <div
-              className="font-light leading-none mb-3 text-[color:var(--muted)]"
-              style={{ fontSize: '44px', letterSpacing: '-0.03em' }}
-            >
-              {s.n}
-            </div>
-            <h3 className="text-[16.5px] font-medium mb-2">{s.title}</h3>
-            <p className="text-[14px] text-gray-400 leading-relaxed">{s.body}</p>
+            {/* Step number. On the shared page scale rather than a hardcoded
+                44px, so it stays a step below the section heading above it. */}
+            <div className="fs-page font-light mb-3 text-muted">{s.n}</div>
+            <h3 className="text-lg font-medium mb-2">{s.title}</h3>
+            <p className="text-base text-gray-400 leading-relaxed">{s.body}</p>
           </div>
         ))}
       </div>
 
       <div className="liquid-glass rounded-2xl p-7 flex flex-wrap items-center justify-between gap-5">
         <div className="max-w-xl">
-          <h3 className="text-[17px] font-medium mb-1.5">Хотите стать станцией?</h3>
-          <p className="text-[14px] text-gray-400">
+          <h3 className="text-lg font-medium mb-1.5">Хотите стать станцией?</h3>
+          <p className="text-base text-gray-400">
             Напишите нам — вышлем список комплектующих, прошивку и персональный ключ.
             Особенно ищем дворы в слепых зонах: Наурызбай, верхний Турксиб, окраины Алатауского района.
           </p>

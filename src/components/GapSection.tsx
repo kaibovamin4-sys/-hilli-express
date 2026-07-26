@@ -94,37 +94,37 @@ export default function GapSection({ devices }: GapSectionProps) {
           {!loaded ? (
             <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-3.5 animate-pulse">
               <div>
-                <div className="h-[52px] sm:h-[68px] w-20 bg-white/10 rounded-lg" />
-                <div className="h-3 w-24 bg-white/10 rounded mt-3" />
+                <div className="h-[52px] sm:h-[68px] w-20 bg-fill-active rounded-lg" />
+                <div className="h-3 w-24 bg-fill-active rounded mt-3" />
               </div>
-              <div className="text-[color:var(--muted)] text-sm pt-4">vs</div>
+              <div className="text-muted text-sm pt-4">vs</div>
               <div>
-                <div className="h-[52px] sm:h-[68px] w-20 bg-white/10 rounded-lg" />
-                <div className="h-3 w-28 bg-white/10 rounded mt-3" />
+                <div className="h-[52px] sm:h-[68px] w-20 bg-fill-active rounded-lg" />
+                <div className="h-3 w-28 bg-fill-active rounded mt-3" />
               </div>
             </div>
           ) : (
           <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-3.5">
             <div>
               <div
-                className="font-light leading-none"
-                style={{ fontSize: 'clamp(44px, 5vw, 72px)', letterSpacing: '-0.04em', color: 'var(--good)' }}
+                className="fs-metric font-light"
+                style={{ color: 'var(--good)' }}
               >
                 {offNow}
               </div>
-              <div className="text-[13px] text-[color:var(--muted)] mt-2">
+              <div className="text-sm text-muted mt-2">
                 Чистый район<br />{officialName}, µg/m³
               </div>
             </div>
-            <div className="text-[color:var(--muted)] text-sm pt-4">vs</div>
+            <div className="text-muted text-sm pt-4">vs</div>
             <div>
               <div
-                className="font-light leading-none"
-                style={{ fontSize: 'clamp(44px, 5vw, 72px)', letterSpacing: '-0.04em', color: 'var(--bad)' }}
+                className="fs-metric font-light"
+                style={{ color: 'var(--bad)' }}
               >
                 {locNow}
               </div>
-              <div className="text-[13px] text-[color:var(--muted)] mt-2">
+              <div className="text-sm text-muted mt-2">
                 Загруженный район<br />{localName}, µg/m³
               </div>
             </div>
@@ -134,11 +134,11 @@ export default function GapSection({ devices }: GapSectionProps) {
           <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)' }} />
 
           {!loaded ? (
-            <p className="text-[15px] text-gray-400 leading-relaxed animate-pulse">
+            <p className="text-md text-gray-400 leading-relaxed animate-pulse">
               Загружаем свежие данные по датчикам…
             </p>
           ) : (
-          <p className="text-[15px] text-gray-300 leading-relaxed">
+          <p className="text-md text-gray-300 leading-relaxed">
             Пост: <b className="text-white font-semibold">{offNow}</b> · У нас:{' '}
             <b className="text-white font-semibold">{locNow}</b> — в{' '}
             <b className="text-white font-semibold">{ratio} раза выше</b>. Для здоровья это
@@ -149,7 +149,7 @@ export default function GapSection({ devices }: GapSectionProps) {
         </div>
 
         <div className="liquid-glass rounded-2xl pt-6 px-6 pb-4">
-          <div className="flex flex-wrap gap-4 text-[13px] text-gray-300 mb-2">
+          <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-2">
             <span className="inline-flex items-center gap-2">
               <span className="w-5 h-[2.5px] rounded" style={{ background: 'var(--good)' }} />
               чистый район
@@ -221,11 +221,11 @@ export default function GapSection({ devices }: GapSectionProps) {
             ))}
           </svg>
 
-          <p className="text-[13px] text-[color:var(--muted)] mt-2">
+          <p className="text-sm text-muted mt-2">
             {anomHours.length > 0 ? (
               <>
                 Детектор аномалий (z-score &gt; 2σ) подсветил резкое ухудшение в часы:{' '}
-                <b className="text-[color:var(--bad)] font-medium">
+                <b className="text-bad font-medium">
                   {anomHours.map((h) => `${h}:00`).join(', ')}
                 </b>.
               </>

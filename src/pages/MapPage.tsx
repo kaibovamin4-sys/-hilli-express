@@ -10,6 +10,7 @@
 // others — with ~500 markers and grid cells that difference is visible.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Trees } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -26,7 +27,9 @@ import { useApp } from '../lib/appState';
 import { navigate } from '../lib/router';
 import PlacePicker from '../components/PlacePicker';
 import { Chip, EmptyState, Panel, PageHeader, Skeleton } from '../components/ui/Panel';
-import { pmColorVar } from '../components/charts/primitives';
+import { BAND_COLOR, BAND_LABEL, aqiBand, pmBand, pmColorVar } from '../components/charts/primitives';
+import { BandLegend, BandMark } from '../components/ui/Band';
+import type { Band } from '../components/charts/primitives';
 
 const CITY = { lat: 43.246, lng: 76.9 };
 
@@ -50,6 +53,22 @@ function trafficColor(load: number): string {
 
 const escapeHtml = (s: string): string =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+// Marker geometry per band, so severity survives greyscale and colour-blind
+// vision on the map too: the polygon outline and the centroid dot change shape
+// as well as hue. Leaflet has no polygon shapes, so the outline encodes the
+// band in its dash pattern and the centroid dot in its radius.
+const BAND_STROKE: Record<Band, string | undefined> = {
+  good: undefined,      // solid — nothing to flag
+  mid: '7 4',           // long dash
+  bad: '2 3',           // tight dots, reads as a hazard hatch
+};
+const BAND_RADIUS: Record<Band, number> = { good: 10, mid: 12, bad: 14 };
+
+/** Band for a district row: PM2.5 when measured, AQI composite otherwise. */
+function districtBand(r: { pm2_5?: number | null; score: number }): Band {
+  return r.pm2_5 != null ? pmBand(r.pm2_5) : aqiBand(r.score);
+}
 
 export default function MapPage() {
   const { place, districtGeo, devices } = useApp();
@@ -149,13 +168,17 @@ export default function MapPage() {
     const layer = L.geoJSON(districtGeo as GeoJSON.GeoJsonObject, {
       style: (feature) => {
         const rank = byName.get(String(feature?.properties?.name ?? ''));
-        const color = rank ? pmColorVar(rank.pm2_5 ?? rank.score / 3) : '#475569';
+        if (!rank) {
+          return { color: '#475569', weight: 1.4, fillColor: '#475569', fillOpacity: 0.05, dashArray: '4 4' };
+        }
+        const band = districtBand(rank);
+        const color = BAND_COLOR[band];
         return {
           color,
-          weight: 1.4,
+          weight: band === 'good' ? 1.4 : 2,
           fillColor: color,
-          fillOpacity: rank ? 0.16 : 0.05,
-          dashArray: rank ? undefined : '4 4',
+          fillOpacity: 0.16,
+          dashArray: BAND_STROKE[band],
         };
       },
       onEachFeature: (feature, lyr) => {
@@ -176,17 +199,24 @@ export default function MapPage() {
 
     // Circle at each district centroid: the at-a-glance "status dot" that
     // reads even when the polygons are too small to distinguish on a phone.
-    const dots = ranking.map((r) =>
-      L.circleMarker([r.lat, r.lng], {
-        radius: 13,
-        color: pmColorVar(r.pm2_5 ?? r.score / 3),
+    const dots = ranking.map((r) => {
+      const band = districtBand(r);
+      return L.circleMarker([r.lat, r.lng], {
+        radius: BAND_RADIUS[band],
+        color: BAND_COLOR[band],
         weight: 2,
-        fillColor: pmColorVar(r.pm2_5 ?? r.score / 3),
+        dashArray: BAND_STROKE[band],
+        fillColor: BAND_COLOR[band],
         fillOpacity: 0.28,
       })
         .addTo(map)
-        .bindTooltip(`${r.district}: PM2.5 ${r.pm2_5 ?? '—'}`, { direction: 'top' }),
-    );
+        // The band word goes in the tooltip too: the dot alone should never be
+        // the only place the verdict exists.
+        .bindTooltip(
+          `${r.district}: ${BAND_LABEL[band]} · PM2.5 ${r.pm2_5 ?? '—'}`,
+          { direction: 'top' },
+        );
+    });
 
     return () => {
       map.removeLayer(layer);
@@ -285,13 +315,23 @@ export default function MapPage() {
     if (!map || !active.spots) return;
     const layers = spots.map((s) =>
       L.marker([s.lat, s.lng], {
+        // Inline SVG rather than a 🌳 glyph: the marker has to look the same
+        // on every platform, and the stroke has to take the theme colour.
         icon: L.divIcon({
           className: '',
-          html:
-            `<div style="width:26px;height:26px;border-radius:8px;` +
-            `background:${s.verdict === 'не сегодня' ? 'rgba(248,113,113,0.25)' : 'rgba(74,222,128,0.22)'};` +
-            `border:1px solid ${s.verdict === 'не сегодня' ? 'var(--bad)' : 'var(--good)'};` +
-            `font-size:14px;line-height:25px;text-align:center">🌳</div>`,
+          html: (() => {
+            const bad = s.verdict === 'не сегодня';
+            const stroke = bad ? 'var(--bad)' : 'var(--good)';
+            const fill = bad ? 'rgba(248,113,113,0.25)' : 'rgba(74,222,128,0.22)';
+            return (
+              `<div style="width:26px;height:26px;border-radius:10px;background:${fill};` +
+              `border:1px solid ${stroke};display:flex;align-items:center;justify-content:center">` +
+              `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${stroke}" ` +
+              `stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
+              `<path d="M12 21v-6"/><path d="M9 15a4 4 0 0 1-2.4-7.2A4.5 4.5 0 0 1 12 3a4.5 4.5 0 0 1 5.4 4.8A4 4 0 0 1 15 15Z"/>` +
+              `</svg></div>`
+            );
+          })(),
           iconSize: [26, 26],
           iconAnchor: [13, 13],
         }),
@@ -404,23 +444,24 @@ export default function MapPage() {
       <div className="liquid-glass rounded-2xl p-2.5">
         <div
           ref={mapEl}
-          className="h-[420px] sm:h-[520px] lg:h-[620px] rounded-[14px] z-[1]"
+          className="h-[420px] sm:h-[520px] lg:h-[620px] rounded-2xl z-[1]"
         />
       </div>
 
-      <div className="flex flex-wrap gap-2.5">
-        <Legend color="var(--good)" label="чисто · PM2.5 до 15" />
-        <Legend color="var(--mid)" label="средне · 15–35" />
-        <Legend color="var(--bad)" label="плохо · 35+" />
-        <Legend color="#818cf8" label="площадка под будущую станцию" dashed />
-        {/* Marker fill still follows PM2.5 for both — only the border style
-            differs — so both swatches share one neutral colour and let dashed
-            vs solid carry the distinction, instead of one entry trying to
-            explain two opposite states through a single icon. */}
-        <Legend color="var(--muted)" label="демо-станция" dashed />
-        <Legend color="var(--muted)" label="станция с реальным железом" />
-        <Legend color="#fff" label="ваша точка" />
-        <Legend color="var(--good)" label="🌳 место для прогулки" />
+      {/* The band scale is generated from the thresholds themselves and names
+          the metric, so the same three colours can never quietly mean PM2.5 on
+          this screen and the AQI composite on the next one. The marker-style
+          entries below it describe what a *pin* means, which is a different
+          question from what a colour means — hence the two rows. */}
+      <div className="flex flex-col gap-2.5">
+        <BandLegend metric="pm" />
+        <div className="flex flex-wrap gap-2.5">
+          <Legend label="площадка под будущую станцию" color="#818cf8" dashed />
+          <Legend label="демо-станция (данные модели)" color="var(--muted)" dashed />
+          <Legend label="станция с реальным железом" color="var(--muted)" />
+          <Legend label="ваша точка" color="#fff" />
+          <Legend label="место для прогулки" icon="tree" />
+        </div>
       </div>
 
       {relative && (
@@ -429,19 +470,19 @@ export default function MapPage() {
           sub={`Сравнение отталкивается от «${place?.label ?? 'выбранной точки'}».`}
         >
           <div className="grid sm:grid-cols-3 gap-3 mb-4">
-            <div className="rounded-xl bg-white/[0.03] border border-white/10 p-3.5">
-              <p className="text-[11.5px] uppercase tracking-[0.1em] text-[color:var(--muted)]">Ваш район</p>
-              <p className="text-[20px] leading-tight mt-1">{relative.nearest.district}</p>
-              <p className="text-[12.5px] text-[color:var(--muted)] mt-1">
+            <div className="rounded-xl bg-fill border border-line p-3.5">
+              <p className="text-xs uppercase tracking-[0.1em] text-muted">Ваш район</p>
+              <p className="text-xl leading-tight mt-1">{relative.nearest.district}</p>
+              <p className="text-sm text-muted mt-1">
                 {relative.position}-е место из {relative.total} по чистоте
               </p>
             </div>
-            <div className="rounded-xl bg-white/[0.03] border border-white/10 p-3.5">
-              <p className="text-[11.5px] uppercase tracking-[0.1em] text-[color:var(--muted)]">
+            <div className="rounded-xl bg-fill border border-line p-3.5">
+              <p className="text-xs uppercase tracking-[0.1em] text-muted">
                 Разница с городом
               </p>
               <p
-                className="text-[20px] leading-tight mt-1 tabular-nums"
+                className="text-xl leading-tight mt-1 tabular-nums"
                 style={{
                   color:
                     (relative.nearest.pm2_5 ?? 0) <= relative.cityAvg ? 'var(--good)' : 'var(--bad)',
@@ -450,33 +491,41 @@ export default function MapPage() {
                 {(relative.nearest.pm2_5 ?? 0) <= relative.cityAvg ? '−' : '+'}
                 {Math.abs(Math.round(((relative.nearest.pm2_5 ?? 0) - relative.cityAvg) * 10) / 10)} µg/m³
               </p>
-              <p className="text-[12.5px] text-[color:var(--muted)] mt-1">
+              <p className="text-sm text-muted mt-1">
                 среднее по городу {Math.round(relative.cityAvg * 10) / 10}
               </p>
             </div>
-            <div className="rounded-xl bg-white/[0.03] border border-white/10 p-3.5">
-              <p className="text-[11.5px] uppercase tracking-[0.1em] text-[color:var(--muted)]">
+            <div className="rounded-xl bg-fill border border-line p-3.5">
+              <p className="text-xs uppercase tracking-[0.1em] text-muted">
                 Сейчас чище всего
               </p>
-              <p className="text-[20px] leading-tight mt-1" style={{ color: 'var(--good)' }}>
+              <p className="text-xl leading-tight mt-1" style={{ color: 'var(--good)' }}>
                 {relative.best.district}
               </p>
-              <p className="text-[12.5px] text-[color:var(--muted)] mt-1">
+              <p className="text-sm text-muted mt-1">
                 PM2.5 {relative.best.pm2_5 ?? '—'} µg/m³
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto -mx-1 px-1">
-            <table className="w-full text-[13px] min-w-[460px]">
+          {/* Was `min-w-[Npx]` inside `overflow-x-auto`: on a phone the table was
+                  wider than the screen, scrolled sideways, and gave no sign
+                  that it did. Secondary columns now drop out below their
+                  breakpoint instead, so the table fits; `scroll-x` paints an
+                  edge shadow for the cases where it still overflows, and
+                  `scope`/`caption` give the remaining grid a structure a screen
+                  reader can navigate. */}
+          <div className="scroll-x -mx-1 px-1">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Районы Алматы, отсортированные по чистоте воздуха</caption>
               <thead>
-                <tr className="text-[color:var(--muted)] text-left">
-                  <th className="font-normal py-2">#</th>
-                  <th className="font-normal py-2">Район</th>
-                  <th className="font-normal py-2 text-right">Индекс</th>
-                  <th className="font-normal py-2 text-right">PM2.5</th>
-                  <th className="font-normal py-2 text-right">AQI</th>
-                  <th className="font-normal py-2 text-right">Уверенность</th>
+                <tr className="text-muted text-left">
+                  <th scope="col" className="font-normal py-2">#</th>
+                  <th scope="col" className="font-normal py-2">Район</th>
+                  <th scope="col" className="font-normal py-2 text-right">Индекс</th>
+                  <th scope="col" className="font-normal py-2 text-right hidden sm:table-cell">PM2.5</th>
+                  <th scope="col" className="font-normal py-2 text-right hidden md:table-cell">AQI</th>
+                  <th scope="col" className="font-normal py-2 text-right">Уверенность</th>
                 </tr>
               </thead>
               <tbody>
@@ -485,27 +534,24 @@ export default function MapPage() {
                   return (
                     <tr
                       key={r.district}
-                      className="border-t border-white/[0.07]"
+                      className="border-t border-line-soft"
                       style={mine ? { background: 'rgba(255,255,255,0.05)' } : undefined}
                     >
-                      <td className="py-2 tabular-nums text-[color:var(--muted)]">{i + 1}</td>
+                      <td className="py-2 tabular-nums text-muted">{i + 1}</td>
                       <td className="py-2">
                         <span className="inline-flex items-center gap-2">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{ background: pmColorVar(r.pm2_5 ?? r.score / 3) }}
-                          />
+                          <BandMark band={r.pm2_5 != null ? pmBand(r.pm2_5) : aqiBand(r.score)} />
                           {r.district}
-                          {mine && <span className="text-[11px] text-[color:var(--muted)]">— вы здесь</span>}
+                          {mine && <span className="text-2xs text-muted">— вы здесь</span>}
                         </span>
                       </td>
                       <td className="py-2 text-right tabular-nums">{r.score}</td>
-                      <td className="py-2 text-right tabular-nums">{r.pm2_5 ?? '—'}</td>
-                      <td className="py-2 text-right tabular-nums">{r.aqi_composite}</td>
-                      <td className="py-2 text-right tabular-nums text-[color:var(--muted)]">
+                      <td className="py-2 text-right tabular-nums hidden sm:table-cell">{r.pm2_5 ?? '—'}</td>
+                      <td className="py-2 text-right tabular-nums hidden md:table-cell">{r.aqi_composite}</td>
+                      <td className="py-2 text-right tabular-nums text-muted">
                         {Math.round(r.confidence * 100)}%
                         {r.is_blind_zone && (
-                          <span className="block text-[11px]" style={{ color: 'var(--bad)' }}>
+                          <span className="block text-2xs" style={{ color: 'var(--bad)' }}>
                             слепая зона
                           </span>
                         )}
@@ -530,14 +576,14 @@ export default function MapPage() {
             {spots.map((s) => (
               <div
                 key={s.id}
-                className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5"
+                className="rounded-xl border border-line bg-fill p-3.5"
                 style={{ borderTop: `2px solid ${pmColorVar(s.pm25_estimate)}` }}
               >
-                <p className="text-[14px] mb-0.5">{s.name}</p>
-                <p className="text-[11.5px] mb-1.5" style={{ color: pmColorVar(s.pm25_estimate) }}>
+                <p className="text-base mb-0.5">{s.name}</p>
+                <p className="text-xs mb-1.5" style={{ color: pmColorVar(s.pm25_estimate) }}>
                   {s.verdict} · {s.distance_km} км
                 </p>
-                <p className="text-[12px] text-[color:var(--muted)] leading-relaxed">{s.reason}</p>
+                <p className="text-xs text-muted leading-relaxed">{s.reason}</p>
               </div>
             ))}
           </div>
@@ -552,13 +598,13 @@ export default function MapPage() {
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="text-[12.5px] text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
+              className="tap-target cursor-pointer text-sm text-gray-300 border border-line rounded-full px-3.5 py-1.5 bg-fill hover:bg-fill-hover transition-colors"
             >
               Статистика
             </button>
           }
         >
-          <p className="text-[13px] text-gray-300 leading-relaxed mb-3">
+          <p className="text-sm text-gray-300 leading-relaxed mb-3">
             Сейчас {plan.current.length} станций покрывают{' '}
             <b>{Math.round(plan.current_coverage * 100)}%</b> населения города.
             {plan.stations_for_90pct != null && (
@@ -568,11 +614,11 @@ export default function MapPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {plan.planned.slice(0, 6).map((p) => (
               <div key={p.order} className="rounded-xl border border-indigo-400/25 bg-indigo-400/[0.06] p-3.5">
-                <p className="text-[13.5px] mb-0.5">
+                <p className="text-base mb-0.5">
                   #{p.order} · {p.district ?? 'точка'}
                 </p>
-                <p className="text-[11.5px] text-indigo-200/80 mb-1.5">{p.phase_label}</p>
-                <p className="text-[12px] text-[color:var(--muted)]">
+                <p className="text-xs text-indigo-200/80 mb-1.5">{p.phase_label}</p>
+                <p className="text-xs text-muted">
                   +{Math.round(p.coverage_gain * 100)}% покрытия → всего{' '}
                   {Math.round(p.cumulative_coverage * 100)}%
                 </p>
@@ -587,13 +633,33 @@ export default function MapPage() {
   );
 }
 
-function Legend({ color, label, dashed }: { color: string; label: string; dashed?: boolean }) {
+function Legend({
+  color,
+  label,
+  dashed,
+  icon,
+}: {
+  color?: string;
+  label: string;
+  dashed?: boolean;
+  icon?: 'tree';
+}) {
   return (
-    <span className="inline-flex items-center gap-2 text-[12.5px] text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03]">
-      <span
-        className="w-[11px] h-[11px] rounded-full"
-        style={{ background: dashed ? 'transparent' : color, border: dashed ? `1px dashed ${color}` : undefined }}
-      />
+    <span className="inline-flex items-center gap-2 text-sm text-gray-300 border border-line rounded-full px-3.5 py-1.5 bg-fill">
+      {icon === 'tree' ? (
+        // Was a 🌳 in the label string. Emoji render differently on every
+        // platform, cannot take a theme colour, and put a second icon family
+        // into an interface that otherwise uses one.
+        <Trees size={13} className="text-good shrink-0" aria-hidden="true" />
+      ) : (
+        <span
+          className="w-[11px] h-[11px] rounded-full shrink-0"
+          style={{
+            background: dashed ? 'transparent' : color,
+            border: dashed ? `1px dashed ${color}` : undefined,
+          }}
+        />
+      )}
       {label}
     </span>
   );

@@ -23,17 +23,18 @@ export default function AboutPage() {
         sub="Собственная сеть станций на ESP8266 с сенсорами MQ2/MQ4/MQ8 и DHT22, поверх открытых моделей Open-Meteo. Всё, что вы видите в приложении, считается из этих двух источников — и подписывается, из какого именно."
       />
 
-      {/* These sections carry their own <Section> wrapper with the landing's
-          wide padding; the negative margin cancels the shell's page padding so
-          they keep their original full-bleed rhythm. */}
-      <div className="-mx-4 sm:-mx-6 lg:-mx-10">
-        <GapSection devices={devices} />
-        <AirSensorSection />
-        <ImpactSection />
-        <JoinSection />
-        <AboutSection />
-        <Footer />
-      </div>
+      {/* No negative margin any more. <Section> used to carry the standalone
+          landing's own horizontal padding, so this wrapper had to cancel the
+          shell's padding to stop the two from stacking — which is also why the
+          page read as a different product. <Section> now inherits the shell's
+          gutters and the shared display scale, so /about lines up with every
+          other screen and this is a plain stack. */}
+      <GapSection devices={devices} />
+      <AirSensorSection />
+      <ImpactSection />
+      <JoinSection />
+      <AboutSection />
+      <Footer />
     </div>
   );
 }

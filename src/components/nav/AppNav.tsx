@@ -52,7 +52,7 @@ export default function AppNav({ statusColor }: AppNavProps) {
               style={{ background: statusColor, boxShadow: `0 0 12px ${statusColor}` }}
             />
             AUA
-            <small className="text-[11px] font-normal text-[color:var(--muted)] tracking-normal">
+            <small className="text-2xs font-normal text-muted tracking-normal">
               воздух Алматы
             </small>
           </button>
@@ -67,7 +67,7 @@ export default function AppNav({ statusColor }: AppNavProps) {
                   onClick={() => navigate(p)}
                   aria-current={active ? 'page' : undefined}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm transition-colors ${
-                    active ? 'bg-white/[0.10] text-white' : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+                    active ? 'bg-fill-active text-white' : 'text-gray-400 hover:text-white hover:bg-fill-hover'
                   }`}
                   style={active ? { color: statusColor } : undefined}
                 >
@@ -87,7 +87,7 @@ export default function AppNav({ statusColor }: AppNavProps) {
           and the bar would scroll away with the page. */}
       <div className="md:hidden fixed bottom-0 inset-x-0 z-[900]">
         <nav
-          className="liquid-glass liquid-glass--solid border-t border-white/10"
+          className="liquid-glass liquid-glass--solid border-t border-line"
           // iPhones put the home indicator where the bar sits; without the inset
           // the labels are half-covered by it in standalone (installed) mode.
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
@@ -101,11 +101,11 @@ export default function AppNav({ statusColor }: AppNavProps) {
                   type="button"
                   onClick={() => navigate(p)}
                   aria-current={active ? 'page' : undefined}
-                  className="flex flex-col items-center gap-1 pt-2.5 pb-2 active:bg-white/[0.06] transition-colors"
+                  className="flex flex-col items-center gap-1 pt-2.5 pb-2 active:bg-fill-active transition-colors"
                   style={{ color: active ? statusColor : 'var(--muted)' }}
                 >
                   <Icon className="w-[22px] h-[22px]" />
-                  <span className="text-[10.5px] leading-none">{label}</span>
+                  <span className="text-2xs leading-none">{label}</span>
                   <span
                     className="block h-[2px] w-6 rounded-full transition-opacity"
                     style={{ background: statusColor, opacity: active ? 1 : 0 }}

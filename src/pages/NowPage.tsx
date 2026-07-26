@@ -14,7 +14,9 @@ import PlacePicker from '../components/PlacePicker';
 import BringList from '../components/BringList';
 import { Chip, EmptyState, Panel, Skeleton, StatTile } from '../components/ui/Panel';
 import Gauge from '../components/charts/Gauge';
-import { pmColorVar } from '../components/charts/primitives';
+import { pmBand, pmColorVar } from '../components/charts/primitives';
+import { BandMark } from '../components/ui/Band';
+import { RecIcon } from '../components/ui/RecIcon';
 
 const PRIORITY_COLOR: Record<string, string> = {
   danger: 'var(--bad)',
@@ -87,7 +89,7 @@ export default function NowPage() {
           <Skeleton lines={3} />
         ) : status ? (
           <>
-            <p className="text-[13.5px] text-gray-300 leading-relaxed">
+            <p className="text-base text-gray-300 leading-relaxed">
               {status.status_reason}. Оценка{' '}
               {status.local.based_on === 'measurement' ? 'по измерению' : 'интерполирована'}, уверенность{' '}
               {Math.round(status.confidence * 100)} %
@@ -161,10 +163,10 @@ export default function NowPage() {
                   size={150}
                 />
                 <div className="min-w-0">
-                  <p className="text-[22px] leading-tight mb-1">
+                  <p className="text-xl leading-tight mb-1">
                     {timeRange(status.best_walk_window.start, status.best_walk_window.end)}
                   </p>
-                  <p className="text-[12.5px] text-[color:var(--muted)] leading-relaxed">
+                  <p className="text-sm text-muted leading-relaxed">
                     {status.best_walk_window.reason}
                   </p>
                 </div>
@@ -177,15 +179,15 @@ export default function NowPage() {
           {/* City layers */}
           <Panel title="Слои города">
             {status?.city ? (
-              <ul className="flex flex-col gap-2.5 text-[13px]">
+              <ul className="flex flex-col gap-2.5 text-sm">
                 <li className="flex items-start justify-between gap-3">
-                  <span className="text-[color:var(--muted)]">Пробки</span>
+                  <span className="text-muted">Пробки</span>
                   <span className="text-right">
                     {TRAFFIC_LABEL[status.city.traffic.level] ?? status.city.traffic.level} · индекс{' '}
                     {status.city.traffic.index} из 10
                     {status.city.traffic.is_rush_hour && ' · час пик'}
                     {status.city.traffic.nearest_corridor && (
-                      <span className="block text-[color:var(--muted)] text-[12px]">
+                      <span className="block text-muted text-xs">
                         {status.city.traffic.nearest_corridor.name},{' '}
                         {status.city.traffic.nearest_corridor.distance_km} км
                       </span>
@@ -193,11 +195,11 @@ export default function NowPage() {
                   </span>
                 </li>
                 <li className="flex items-start justify-between gap-3">
-                  <span className="text-[color:var(--muted)]">Стройки</span>
+                  <span className="text-muted">Стройки</span>
                   <span className="text-right">
                     {status.city.construction.inside_zone ? 'вы в зоне пыли' : 'рядом нет'}
                     {status.city.construction.nearest && (
-                      <span className="block text-[color:var(--muted)] text-[12px]">
+                      <span className="block text-muted text-xs">
                         {status.city.construction.nearest.name}, {status.city.construction.nearest.distance_km} км
                       </span>
                     )}
@@ -205,7 +207,7 @@ export default function NowPage() {
                 </li>
                 {status.fusion && (
                   <li className="flex items-start justify-between gap-3">
-                    <span className="text-[color:var(--muted)]">Как посчитан PM2.5</span>
+                    <span className="text-muted">Как посчитан PM2.5</span>
                     <span className="text-right">
                       фон {Math.round(status.fusion.background_pm25)}{' '}
                       {status.fusion.local_correction >= 0 ? '+' : '−'}{' '}
@@ -229,14 +231,19 @@ export default function NowPage() {
               {status.recommendations.map((r) => (
                 <div
                   key={`${r.category}-${r.title}`}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5"
+                  className="rounded-xl border border-line bg-fill p-3.5"
                   style={{ borderLeft: `3px solid ${PRIORITY_COLOR[r.priority] ?? 'var(--muted)'}` }}
                 >
-                  <p className="text-[14px] mb-1">
-                    <span className="mr-2" aria-hidden="true">{r.icon}</span>
+                  <p className="text-base mb-1 flex items-start gap-2.5">
+                    <span
+                      className="mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-fill-hover"
+                      style={{ color: PRIORITY_COLOR[r.priority] ?? 'var(--muted)' }}
+                    >
+                      <RecIcon icon={r.icon} size={14} />
+                    </span>
                     {r.title}
                   </p>
-                  <p className="text-[12.5px] text-[color:var(--muted)] leading-relaxed">{r.body}</p>
+                  <p className="text-sm text-muted leading-relaxed">{r.body}</p>
                 </div>
               ))}
             </div>
@@ -255,7 +262,7 @@ export default function NowPage() {
           <button
             type="button"
             onClick={() => navigate('/map')}
-            className="text-[12.5px] text-gray-300 border border-white/15 rounded-full px-3.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.07] transition-colors"
+            className="tap-target cursor-pointer text-sm text-gray-300 border border-line rounded-full px-3.5 py-1.5 bg-fill hover:bg-fill-hover transition-colors"
           >
             На карте
           </button>
@@ -268,19 +275,20 @@ export default function NowPage() {
         ) : (
           <div className="grid sm:grid-cols-2 gap-2.5">
             {spots.map((s) => (
-              <div key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+              <div key={s.id} className="rounded-xl border border-line bg-fill p-3.5">
                 <div className="flex items-baseline justify-between gap-2 mb-1">
-                  <span className="text-[14px]">{s.name}</span>
+                  <span className="text-base">{s.name}</span>
                   <span
-                    className="text-[11.5px] shrink-0"
+                    className="text-xs shrink-0 inline-flex items-center gap-1.5"
                     style={{ color: pmColorVar(s.pm25_estimate) }}
                   >
+                    <BandMark band={pmBand(s.pm25_estimate)} decorative />
                     {s.verdict}
                   </span>
                 </div>
                 {/* The backend's reason string already spells out PM2.5 and
                     distance, so repeating them here would just be noise. */}
-                <p className="text-[12.5px] text-[color:var(--muted)] leading-relaxed">{s.reason}</p>
+                <p className="text-sm text-muted leading-relaxed">{s.reason}</p>
               </div>
             ))}
           </div>
@@ -292,9 +300,9 @@ export default function NowPage() {
         <Panel title="Откуда взялась оценка" sub="Вклад каждого поста в цифру выше.">
           <ul className="flex flex-col gap-2">
             {status.local.contributing_posts.map((c) => (
-              <li key={c.device_id} className="flex items-center gap-3 text-[13px]">
+              <li key={c.device_id} className="flex items-center gap-3 text-sm">
                 <span className="w-[130px] shrink-0 truncate text-gray-300">{c.name}</span>
-                <div className="flex-1 h-2 rounded-full bg-white/[0.05] overflow-hidden">
+                <div className="flex-1 h-2 rounded-full bg-fill overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -303,7 +311,7 @@ export default function NowPage() {
                     }}
                   />
                 </div>
-                <span className="w-[92px] shrink-0 text-right text-[color:var(--muted)] tabular-nums">
+                <span className="w-[92px] shrink-0 text-right text-muted tabular-nums">
                   {Math.round(c.weight * 100)}% · {c.distance_km} км
                 </span>
               </li>
@@ -312,7 +320,7 @@ export default function NowPage() {
         </Panel>
       )}
 
-      <p className="text-[11.5px] text-[color:var(--muted)] leading-relaxed px-1">
+      <p className="text-xs text-muted leading-relaxed px-1">
         Это индикатор, а не медицинский прибор. PM2.5 — модель Open-Meteo, скорректированная нашими
         станциями; MQ-сенсоры детектируют горючие газы и дым, а не пыль.
       </p>

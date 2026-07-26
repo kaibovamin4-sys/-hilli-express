@@ -223,8 +223,8 @@ export default function LineChart({
       </svg>
 
       {hover != null && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px]">
-          <span className="text-[color:var(--muted)]">{labels[hover]}</span>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <span className="text-muted">{labels[hover]}</span>
           {series.map((s) => {
             const v = s.values[hover];
             return v == null ? null : (

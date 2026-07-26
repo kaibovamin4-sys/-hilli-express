@@ -32,7 +32,7 @@ export default function BarChart({
 }: BarChartProps) {
   const values = bars.map((b) => b.value).filter((v): v is number => v != null);
   if (values.length === 0) {
-    return <p className="text-sm text-[color:var(--muted)] py-6 text-center">{emptyLabel}</p>;
+    return <p className="text-sm text-muted py-6 text-center">{emptyLabel}</p>;
   }
 
   if (horizontal) return <HorizontalBars bars={bars} unit={unit} />;
@@ -118,16 +118,16 @@ function HorizontalBars({ bars, unit }: { bars: Bar[]; unit: string }) {
     <div className="flex flex-col gap-2.5">
       {bars.map((b) => (
         <div key={b.label} className="flex items-center gap-3">
-          <span className="w-[112px] shrink-0 text-[12.5px] text-gray-300 truncate" title={b.label}>
+          <span className="w-[112px] shrink-0 text-sm text-gray-300 truncate" title={b.label}>
             {b.label}
           </span>
-          <div className="flex-1 h-[22px] rounded-md bg-white/[0.04] overflow-hidden">
+          <div className="flex-1 h-[22px] rounded-lg bg-fill overflow-hidden">
             <div
-              className="h-full rounded-md transition-[width] duration-500"
+              className="h-full rounded-lg transition-[width] duration-500"
               style={{ width: `${((b.value ?? 0) / max) * 100}%`, background: b.color, opacity: 0.85 }}
             />
           </div>
-          <span className="w-[64px] shrink-0 text-right text-[12.5px] tabular-nums">
+          <span className="w-[64px] shrink-0 text-right text-sm tabular-nums">
             {b.value == null ? '—' : `${Math.round(b.value * 10) / 10}${unit}`}
           </span>
         </div>
