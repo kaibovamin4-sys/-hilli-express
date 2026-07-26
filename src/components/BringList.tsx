@@ -9,9 +9,11 @@
 
 import { useMemo } from 'react';
 import type { FullStatus, Profile } from '../lib/api';
+import { RecIcon, type IconKey } from './ui/RecIcon';
 
 export interface BringItem {
-  icon: string;
+  /** Icon KEY resolved by `<RecIcon>` — never a glyph. See ui/RecIcon.tsx. */
+  icon: IconKey;
   title: string;
   why: string;
   /** essential = red dot, useful = amber, optional = plain. */
@@ -42,14 +44,14 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
 
   if (pm25 != null && pm25 >= 35) {
     items.push({
-      icon: '😷',
+      icon: 'mask',
       title: 'Респиратор FFP2 / N95',
       why: `PM2.5 ${Math.round(pm25)} µg/m³ — тканевая маска частицы такого размера не задерживает.`,
       level: 'essential',
     });
   } else if (pm25 != null && pm25 >= 15 && sensitive) {
     items.push({
-      icon: '😷',
+      icon: 'mask',
       title: 'Маска на всякий случай',
       why: 'Воздух умеренный, но у чувствительной группы реакция начинается раньше.',
       level: 'useful',
@@ -58,7 +60,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
 
   if (profile === 'asthma') {
     items.push({
-      icon: '💨',
+      icon: 'wind',
       title: 'Ингалятор',
       why: 'Всегда с собой: при астме приступ может начаться от холодного или запылённого воздуха.',
       level: 'essential',
@@ -67,7 +69,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
 
   if (profile === 'allergy' && pollen && pollen.max_level !== 'none' && pollen.max_level !== 'low') {
     items.push({
-      icon: '🤧',
+      icon: 'allergy',
       title: 'Антигистаминное и салфетки',
       why: `Пыльца: уровень «${pollen.max_level}»${pollen.dominant ? `, преобладает ${pollen.dominant}` : ''}.`,
       level: 'essential',
@@ -77,13 +79,13 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
   if (w) {
     if (w.temperature_c >= 25) {
       items.push({
-        icon: '💧',
+        icon: 'water',
         title: 'Вода',
         why: `${Math.round(w.temperature_c)} °C — на жаре обезвоживание наступает быстрее, чем чувствуется жажда.`,
         level: w.temperature_c >= 30 ? 'essential' : 'useful',
       });
       items.push({
-        icon: '🧢',
+        icon: 'cap',
         title: 'Головной убор',
         why: 'Прямое солнце в полдень — главный источник теплового удара.',
         level: 'useful',
@@ -91,13 +93,13 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
     }
     if (w.uv_index >= 6) {
       items.push({
-        icon: '🧴',
+        icon: 'sunscreen',
         title: `Крем SPF 30+`,
         why: `УФ-индекс ${Math.round(w.uv_index)} — незащищённая кожа краснеет за 20–30 минут.`,
         level: w.uv_index >= 8 ? 'essential' : 'useful',
       });
       items.push({
-        icon: '🕶️',
+        icon: 'sunglasses',
         title: 'Очки с UV-фильтром',
         why: 'Высокий УФ бьёт и по глазам, а не только по коже.',
         level: 'optional',
@@ -105,7 +107,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
     }
     if (w.rain_mm > 0.1) {
       items.push({
-        icon: '☂️',
+        icon: 'umbrella',
         title: 'Зонт или дождевик',
         why: `Осадки ${w.rain_mm.toFixed(1)} мм/ч. Плюс: дождь вымывает пыль, после него воздух чище.`,
         level: 'essential',
@@ -113,7 +115,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
     }
     if (w.snowfall_cm > 0) {
       items.push({
-        icon: '🥾',
+        icon: 'boots',
         title: 'Нескользящая обувь',
         why: `Снег ${w.snowfall_cm.toFixed(1)} см — тротуары в городе чистят неравномерно.`,
         level: 'useful',
@@ -121,13 +123,13 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
     }
     if (w.apparent_c <= 0) {
       items.push({
-        icon: '🧣',
+        icon: 'scarf',
         title: 'Шарф или баф',
         why: `Ощущается как ${Math.round(w.apparent_c)} °C. Дышать через ткань — воздух успевает согреться.`,
         level: w.apparent_c <= -10 ? 'essential' : 'useful',
       });
       items.push({
-        icon: '🧤',
+        icon: 'gloves',
         title: 'Перчатки',
         why: 'Руки мёрзнут первыми, особенно если гуляете с коляской.',
         level: 'useful',
@@ -135,7 +137,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
     }
     if (w.wind_speed_ms >= 8) {
       items.push({
-        icon: '🧥',
+        icon: 'coat',
         title: 'Ветровка',
         why: `Ветер ${w.wind_speed_ms.toFixed(0)} м/с — с ним холод ощущается на несколько градусов ниже.`,
         level: 'useful',
@@ -145,7 +147,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
 
   if (profile === 'infant' || profile === 'child') {
     items.push({
-      icon: '🍼',
+      icon: 'baby',
       title: 'Вода и перекус для ребёнка',
       why: `Комфортное время на улице сегодня — около ${status.max_safe_duration_min} мин.`,
       level: 'useful',
@@ -154,7 +156,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
 
   if (profile === 'athlete' && pm25 != null && pm25 >= 25) {
     items.push({
-      icon: '🏃',
+      icon: 'exercise',
       title: 'Перенести тренировку в зал',
       why: 'На нагрузке вентиляция лёгких растёт в 5–10 раз, вместе с ней и доза частиц.',
       level: 'essential',
@@ -163,7 +165,7 @@ export function buildBringList(status: FullStatus, profile: Profile): BringItem[
 
   if (items.length === 0) {
     items.push({
-      icon: '🙂',
+      icon: 'nothing',
       title: 'Ничего особенного',
       why: 'Погода и воздух спокойные — можно выходить как есть.',
       level: 'optional',
@@ -182,22 +184,25 @@ export default function BringList({ status, profile }: { status: FullStatus; pro
       {items.map((item) => (
         <li
           key={item.title}
-          className="flex items-start gap-3 rounded-xl bg-white/[0.03] border border-white/10 px-3.5 py-3"
+          className="flex items-start gap-3 rounded-xl bg-fill border border-line px-3.5 py-3"
         >
-          <span className="text-[20px] leading-none mt-0.5" aria-hidden="true">
-            {item.icon}
+          <span
+            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-fill-hover"
+            style={{ color: LEVEL_COLOR[item.level] }}
+          >
+            <RecIcon icon={item.icon} size={15} />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-[14px] text-gray-100">{item.title}</span>
+              <span className="text-base text-gray-100">{item.title}</span>
               <span
-                className="text-[10.5px] uppercase tracking-[0.08em]"
+                className="text-2xs uppercase tracking-[0.08em]"
                 style={{ color: LEVEL_COLOR[item.level] }}
               >
                 {LEVEL_LABEL[item.level]}
               </span>
             </div>
-            <p className="text-[12.5px] text-[color:var(--muted)] leading-relaxed mt-0.5">{item.why}</p>
+            <p className="text-sm text-muted leading-relaxed mt-0.5">{item.why}</p>
           </div>
         </li>
       ))}

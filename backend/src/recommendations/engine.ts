@@ -77,7 +77,7 @@ function airRules(input: EngineInput, sens: number): Recommendation[] {
     out.push({
       category: 'air',
       priority: 'danger',
-      icon: '⛔',
+      icon: 'stay-home',
       title: 'Лучше остаться дома',
       body: 'Воздух опасно грязный. Отмените прогулку или сократите до нескольких минут; закройте окна.',
     });
@@ -85,7 +85,7 @@ function airRules(input: EngineInput, sens: number): Recommendation[] {
     out.push({
       category: 'air',
       priority: 'warn',
-      icon: '😷',
+      icon: 'mask',
       title: 'Возьмите маску FFP2/N95',
       body: 'Уровень PM2.5 повышен. Тканевая маска не поможет — нужна плотная FFP2/KN95.',
     });
@@ -93,7 +93,7 @@ function airRules(input: EngineInput, sens: number): Recommendation[] {
     out.push({
       category: 'air',
       priority: 'advice',
-      icon: '🌫️',
+      icon: 'haze',
       title: 'Гулять можно, но недолго',
       body: 'Воздух средний. Если гуляете с младенцем или у вас астма — ограничьте прогулку 30–60 минутами.',
     });
@@ -102,7 +102,7 @@ function airRules(input: EngineInput, sens: number): Recommendation[] {
     out.push({
       category: 'air',
       priority: 'info',
-      icon: '🌿',
+      icon: 'clean-air',
       title: 'Воздух чистый',
       body: 'Отличное время для прогулки.',
     });
@@ -120,7 +120,7 @@ function temperatureRules(w: WeatherSnapshot, p: { heat_sensitivity: number; col
     out.push({
       category: 'heat',
       priority: 'danger',
-      icon: '🥵',
+      icon: 'heat',
       title: 'Аномальная жара',
       body: `Ощущается как +${Math.round(feels)}°C. Избегайте прогулок с 11:00 до 17:00, тепловой удар — реальный риск.`,
     });
@@ -128,14 +128,14 @@ function temperatureRules(w: WeatherSnapshot, p: { heat_sensitivity: number; col
     out.push({
       category: 'heat',
       priority: 'warn',
-      icon: '☀️',
+      icon: 'sun',
       title: 'Жарко',
       body: `Ощущается как +${Math.round(feels)}°C. Головной убор, вода 0.5–1 л, гулять в тени.`,
     });
     out.push({
       category: 'bring',
       priority: 'advice',
-      icon: '💧',
+      icon: 'water',
       title: 'Возьмите воду',
       body: 'В жару теряется до 1 литра пота в час, пейте до того, как захочется.',
     });
@@ -147,14 +147,14 @@ function temperatureRules(w: WeatherSnapshot, p: { heat_sensitivity: number; col
     out.push({
       category: 'cold',
       priority: 'danger',
-      icon: '🥶',
+      icon: 'cold',
       title: 'Опасный холод',
       body: `Ощущается ${Math.round(feels)}°C — риск обморожения открытых участков за 15–30 минут.`,
     });
     out.push({
       category: 'clothing',
       priority: 'warn',
-      icon: '🧣',
+      icon: 'scarf',
       title: 'Многослойная одежда, шарф, варежки',
       body: 'Три слоя: термо, флис, ветрозащита. Шарф, шапка, варежки обязательны.',
     });
@@ -162,7 +162,7 @@ function temperatureRules(w: WeatherSnapshot, p: { heat_sensitivity: number; col
     out.push({
       category: 'clothing',
       priority: 'advice',
-      icon: '🧥',
+      icon: 'coat',
       title: 'Тёплая куртка и шапка',
       body: `Ощущается ${Math.round(feels)}°C. Возьмите шапку и перчатки.`,
     });
@@ -170,7 +170,7 @@ function temperatureRules(w: WeatherSnapshot, p: { heat_sensitivity: number; col
     out.push({
       category: 'clothing',
       priority: 'info',
-      icon: '🧥',
+      icon: 'coat',
       title: 'Куртка не помешает',
       body: `Ощущается ${Math.round(feels)}°C, свежо.`,
     });
@@ -184,7 +184,7 @@ function precipitationRules(w: WeatherSnapshot): Recommendation[] {
     out.push({
       category: 'rain',
       priority: 'warn',
-      icon: '❄️',
+      icon: 'ice',
       title: 'Идёт снег',
       body: 'Непромокаемая обувь, тротуары скользкие.',
     });
@@ -192,7 +192,7 @@ function precipitationRules(w: WeatherSnapshot): Recommendation[] {
     out.push({
       category: 'rain',
       priority: 'warn',
-      icon: '🌧️',
+      icon: 'rain',
       title: 'Сильный дождь',
       body: 'Дождевик или зонт. Обувь с рифлёной подошвой.',
     });
@@ -200,7 +200,7 @@ function precipitationRules(w: WeatherSnapshot): Recommendation[] {
     out.push({
       category: 'bring',
       priority: 'advice',
-      icon: '☂️',
+      icon: 'umbrella',
       title: 'Возьмите зонт',
       body: 'Дождь слабый, но есть.',
     });
@@ -214,7 +214,7 @@ function windRules(w: WeatherSnapshot): Recommendation[] {
     out.push({
       category: 'wind',
       priority: 'danger',
-      icon: '🌪️',
+      icon: 'wind-strong',
       title: 'Штормовой ветер',
       body: `Порывы до ${Math.round(w.wind_gusts_ms)} м/с. Опасность падающих веток и предметов.`,
     });
@@ -222,7 +222,7 @@ function windRules(w: WeatherSnapshot): Recommendation[] {
     out.push({
       category: 'wind',
       priority: 'advice',
-      icon: '💨',
+      icon: 'wind',
       title: 'Сильный ветер',
       body: `Порывы до ${Math.round(w.wind_gusts_ms)} м/с. Легкий головной убор может слетать.`,
     });
@@ -237,7 +237,7 @@ function uvRules(w: WeatherSnapshot, sens: number): Recommendation[] {
     out.push({
       category: 'uv',
       priority: 'warn',
-      icon: '🕶️',
+      icon: 'sunglasses',
       title: 'Очень высокий УФ',
       body: `УФ-индекс ${w.uv_index.toFixed(1)}. Крем SPF 50+, очки, головной убор, тень с 11:00 до 16:00.`,
     });
@@ -245,7 +245,7 @@ function uvRules(w: WeatherSnapshot, sens: number): Recommendation[] {
     out.push({
       category: 'uv',
       priority: 'advice',
-      icon: '🧴',
+      icon: 'sunscreen',
       title: 'Крем от солнца',
       body: `УФ ${w.uv_index.toFixed(1)}. SPF 30+ на лицо и открытые участки.`,
     });
@@ -274,7 +274,7 @@ function pollenRules(p: PollenSnapshot, sens: number): Recommendation[] {
     return [{
       category: 'pollen',
       priority: 'warn',
-      icon: '🌾',
+      icon: 'pollen',
       title: 'Пик пыльцы',
       body: `Очень высокий уровень (${species}). Аллергикам — маска, очки, антигистаминное, окна закрыты.`,
     }];
@@ -282,7 +282,7 @@ function pollenRules(p: PollenSnapshot, sens: number): Recommendation[] {
   return [{
     category: 'pollen',
     priority: 'advice',
-    icon: '🌾',
+    icon: 'pollen',
     title: 'Повышена пыльца',
     body: `Уровень ${p.max_level} (${species}). Аллергикам стоит принять препараты заранее.`,
   }];
@@ -292,7 +292,7 @@ function smokeAlert(): Recommendation {
   return {
     category: 'safety',
     priority: 'danger',
-    icon: '🔥',
+    icon: 'smoke',
     title: 'Обнаружено задымление',
     body: 'Датчики зафиксировали резкий рост горючих газов и дыма поблизости. Закройте окна, не гуляйте.',
   };

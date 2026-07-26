@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { MessageCircle, X } from 'lucide-react';
 import { api, type Point } from '../lib/api';
 
 interface ChatWidgetProps {
@@ -70,12 +71,16 @@ export default function ChatWidget({ place }: ChatWidgetProps) {
       {/* плавающая кнопка */}
       <button
         type="button"
-        aria-label="Открыть эко-ассистента"
+        aria-label={open ? 'Закрыть эко-ассистента' : 'Открыть эко-ассистента'}
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         style={anchor}
-        className={`${BUTTON_BOTTOM_MOBILE} md:bottom-5 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-black text-xl md:text-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
+        className={`${BUTTON_BOTTOM_MOBILE} md:bottom-5 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-black shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
       >
-        {open ? '×' : '💬'}
+        {/* Was 💬 and a literal "×". The speech bubble was the last emoji in the
+            product, and a multiplication sign is not a close icon — it just
+            happens to look like one in most fonts. */}
+        {open ? <X size={22} strokeWidth={2} aria-hidden="true" /> : <MessageCircle size={22} strokeWidth={1.9} aria-hidden="true" />}
       </button>
 
       {open && (
@@ -87,11 +92,11 @@ export default function ChatWidget({ place }: ChatWidgetProps) {
             height: 'min(520px, 70vh)',
           }}
         >
-          <div className="px-5 py-3.5 border-b border-white/10 flex items-center gap-2.5">
+          <div className="px-5 py-3.5 border-b border-line flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full" style={{ background: 'var(--status-c, var(--good))' }} />
             <div>
-              <div className="text-[14px] font-medium text-white leading-tight">Эко-ассистент</div>
-              <div className="text-[11.5px] text-[color:var(--muted)]">отвечает по живым данным · {place?.label ?? '…'}</div>
+              <div className="text-base font-medium text-white leading-tight">Эко-ассистент</div>
+              <div className="text-xs text-muted">отвечает по живым данным · {place?.label ?? '…'}</div>
             </div>
           </div>
 
@@ -99,17 +104,17 @@ export default function ChatWidget({ place }: ChatWidgetProps) {
             {messages.map((m, i) => (
               <div
                 key={i}
-                className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-snug ${
+                className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-base leading-snug ${
                   m.role === 'user'
                     ? 'justify-self-end bg-white text-black rounded-br-md'
-                    : 'justify-self-start bg-white/[0.07] text-gray-200 rounded-bl-md'
+                    : 'justify-self-start bg-fill-hover text-gray-200 rounded-bl-md'
                 }`}
               >
                 {m.text}
               </div>
             ))}
             {busy && (
-              <div className="justify-self-start bg-white/[0.07] text-gray-400 rounded-2xl rounded-bl-md px-3.5 py-2.5 text-[13.5px]">
+              <div className="justify-self-start bg-fill-hover text-gray-400 rounded-2xl rounded-bl-md px-3.5 py-2.5 text-base">
                 думаю…
               </div>
             )}
@@ -121,7 +126,7 @@ export default function ChatWidget({ place }: ChatWidgetProps) {
                 key={s}
                 type="button"
                 onClick={() => void send(s)}
-                className="text-[12px] text-gray-300 border border-white/15 rounded-full px-3 py-1 hover:border-white/40 transition-colors"
+                className="text-xs text-gray-300 border border-line rounded-full px-3 py-1 hover:border-line-strong transition-colors"
               >
                 {s}
               </button>
@@ -129,19 +134,19 @@ export default function ChatWidget({ place }: ChatWidgetProps) {
           </div>
 
           <form
-            className="p-3 border-t border-white/10 flex gap-2"
+            className="p-3 border-t border-line flex gap-2"
             onSubmit={(e) => { e.preventDefault(); void send(input); }}
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Спросите про воздух…"
-              className="flex-1 bg-white/[0.05] border border-white/15 rounded-xl px-3.5 py-2 text-[13.5px] text-white placeholder:text-gray-500 outline-none focus:border-white/40"
+              className="flex-1 bg-fill border border-line rounded-xl px-3.5 py-2 text-base text-white placeholder:text-gray-500"
             />
             <button
               type="submit"
               disabled={busy || input.trim() === ''}
-              className="bg-white text-black rounded-xl px-4 text-[13.5px] font-medium disabled:opacity-40"
+              className="bg-white text-black rounded-xl px-4 text-base font-medium disabled:opacity-40"
             >
               →
             </button>

@@ -104,7 +104,7 @@ export async function computeFullStatus(req: StatusRequest): Promise<FullStatus>
     cityRecs.push({
       category: 'safety',
       priority: construction.dust_factor > 0.5 ? 'warn' : 'advice',
-      icon: '🏗️',
+      icon: 'construction',
       title: 'Рядом активная стройка',
       body: `«${construction.nearest.name}» в ${construction.nearest.distance_km} км — крупная пыль и шум. Для прогулки выберите другое направление.`,
     });
@@ -113,7 +113,7 @@ export async function computeFullStatus(req: StatusRequest): Promise<FullStatus>
     cityRecs.push({
       category: 'air',
       priority: 'advice',
-      icon: '🚗',
+      icon: 'traffic',
       title: 'Час пик у магистрали',
       body: `${traffic.nearest_corridor.name} в ${traffic.nearest_corridor.distance_km} км загружена (${traffic.index}/10). Гуляйте во дворах и парках, не вдоль дороги.`,
     });

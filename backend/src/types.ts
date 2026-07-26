@@ -174,6 +174,30 @@ export type Profile =
   | 'athlete'
   | 'pregnant';
 
+/** Icon vocabulary shared by the recommendation engine and the client. */
+export type RecommendationIcon =
+  | 'stay-home'
+  | 'mask'
+  | 'haze'
+  | 'clean-air'
+  | 'heat'
+  | 'sun'
+  | 'water'
+  | 'cold'
+  | 'scarf'
+  | 'coat'
+  | 'ice'
+  | 'rain'
+  | 'umbrella'
+  | 'wind'
+  | 'wind-strong'
+  | 'sunglasses'
+  | 'sunscreen'
+  | 'pollen'
+  | 'smoke'
+  | 'construction'
+  | 'traffic';
+
 export interface Recommendation {
   category:
     | 'air'
