@@ -227,6 +227,23 @@ textarea:focus-visible {
   }
 }
 
+/* ── Full-bleed ───────────────────────────────────────────────────────────
+   Escapes the page container entirely.
+
+   <main> is `max-w-7xl mx-auto px-4/6/10`, so content is capped at 1280px and
+   centred. The hero used `-mx-4 sm:-mx-6 lg:-mx-10`, which cancels the padding
+   but not the max-width — on anything wider than 1280px the video stopped well
+   short of the screen edges and sat in two dark gutters.
+
+   `margin-inline: calc(50% - 50vw)` pulls the element out to the viewport
+   edges from wherever it happens to sit, whatever the container's width or
+   padding. Safe against the classic 100vw scrollbar overflow because `body`
+   already sets `overflow-x: hidden` above. */
+.full-bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
 /* ── Fluid display scale ──────────────────────────────────────────────────
    The fixed `fontSize` steps in the Tailwind theme cover text; these four
    cover the headline sizes that need to scale with the viewport. There used to

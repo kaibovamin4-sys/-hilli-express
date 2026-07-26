@@ -103,7 +103,7 @@ export default function Hero() {
     // lived in the desktop-only right panel, so a mobile visitor had to scroll
     // past the hero and a whole panel to reach them. The hero is now 52vh on
     // small screens and carries those two numbers itself.
-    <section className="relative -mx-4 sm:-mx-6 lg:-mx-10 min-h-[56vh] md:min-h-[70vh] lg:min-h-[calc(100vh-5rem)] overflow-hidden">
+    <section className="relative full-bleed min-h-[56vh] md:min-h-[70vh] lg:min-h-[calc(100vh-5rem)] overflow-hidden">
       {/* Video sits at z-0, everything else floats above it. */}
       <video
         ref={videoRef}
