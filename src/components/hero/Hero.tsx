@@ -105,17 +105,29 @@ export default function Hero() {
     // small screens and carries those two numbers itself.
     <section className="relative full-bleed min-h-[56vh] md:min-h-[70vh] lg:min-h-[calc(100vh-5rem)] overflow-hidden">
       {/* Video sits at z-0, everything else floats above it. */}
+      {/* WebM first: VP9 is ~25% smaller than the H.264 at the same quality, and
+          browsers pick the first source they can decode. The MP4 is the fallback
+          for Safari. The source was 4K AV1, which Safari before 17 cannot play at
+          all — hence the transcode rather than shipping the original.
+
+          `poster` paints the first frame instantly so the hero is never a black
+          rectangle while 1.8MB streams in; the scrim and glass sit on top of it
+          exactly as they do on the video, so the transition is invisible. */}
       <video
         ref={videoRef}
         className="absolute inset-0 z-0 h-full w-full object-cover"
-        src="/hero.mp4"
+        poster="/hero-poster.jpg"
         autoPlay
         loop
         muted
         playsInline
         aria-hidden="true"
-      />
-      {/* The clip averages 18% luminance but peaks near white; a fixed scrim
+      >
+        <source src="/hero.webm" type="video/webm" />
+        <source src="/hero.mp4" type="video/mp4" />
+      </video>
+      {/* The clip averages 6% luminance but the text column's 95th percentile
+          reaches 0.72 — a dark scene with bright highlights — so a fixed scrim
           keeps the headline legible on the brightest frame instead of letting
           contrast swing with the footage.
           Raised from 45% to 58%: at 45% the small captions over the video
