@@ -13,7 +13,12 @@
 
 import type { Device } from '../types.js';
 import { getDb } from '../db/client.js';
-import { latestProcessedByDevice, listDevices, processedRange } from '../db/repositories.js';
+import {
+  latestProcessedByDevice,
+  listDevices,
+  processedRange,
+  rawHoursCovered,
+} from '../db/repositories.js';
 import { idw, type IdwSource } from '../processing/idw.js';
 
 export interface SensorHealth {
@@ -28,13 +33,14 @@ export interface SensorHealth {
     drift: number;
   };
   last_seen_min_ago: number | null;
-  received_24h: number;
-  expected_24h: number;
+  packets_24h: number;
+  hours_with_data: number;
+  hours_expected: number;
   neighbor_deviation_aqi: number | null;
   hints: string[];
 }
 
-export function computeSensorHealth(deviceId: string, expectedIntervalSec = 30): SensorHealth | null {
+export function computeSensorHealth(deviceId: string): SensorHealth | null {
   const device = listDevices(false).find((d) => d.id === deviceId);
   if (!device) return null;
 
@@ -46,8 +52,12 @@ export function computeSensorHealth(deviceId: string, expectedIntervalSec = 30):
     .prepare('SELECT COUNT(*) AS n FROM readings_raw WHERE device_id = ? AND ts >= ?')
     .get(deviceId, from) as { n: number };
 
-  const expected = Math.floor((24 * 60 * 60) / expectedIntervalSec);
-  const uptime = clamp01(rawCount.n / expected);
+  // Uptime = share of the last 24 hours that received *any* packet, not
+  // packets-received / packets-expected. The sampling interval is not fixed
+  // (seeded history is 5-minutely, live ingest is every 30 s), so a ratio
+  // against one assumed cadence scores a fully healthy station at 10%.
+  const expected = 24;
+  const uptime = clamp01(rawHoursCovered(deviceId, from) / expected);
 
   const ok = readings.filter((r) => r.quality_flag === 'ok').length;
   const data_quality = readings.length === 0 ? 0 : clamp01(ok / readings.length);
@@ -84,7 +94,7 @@ export function computeSensorHealth(deviceId: string, expectedIntervalSec = 30):
       : 'suspect';
 
   const hints: string[] = [];
-  if (uptime < 0.6) hints.push(`Пропущено ${(100 * (1 - uptime)).toFixed(0)}% пакетов за сутки`);
+  if (uptime < 0.6) hints.push(`Данных нет за ${(100 * (1 - uptime)).toFixed(0)}% часов последних суток`);
   if (data_quality < 0.8) hints.push('Много флагов качества (нет T/RH-компенсации или прогрев)');
   if (neighbor_deviation_aqi != null && neighbor_deviation_aqi > 60) {
     hints.push(`Отклонение от соседей на ${neighbor_deviation_aqi} AQI — возможна калибровка / загрязнение сенсора`);
@@ -105,8 +115,9 @@ export function computeSensorHealth(deviceId: string, expectedIntervalSec = 30):
     last_seen_min_ago: device.last_seen_at
       ? Math.round((now - Date.parse(device.last_seen_at)) / 60_000)
       : null,
-    received_24h: rawCount.n,
-    expected_24h: expected,
+    packets_24h: rawCount.n,
+    hours_with_data: rawHoursCovered(deviceId, from),
+    hours_expected: expected,
     neighbor_deviation_aqi,
     hints,
   };

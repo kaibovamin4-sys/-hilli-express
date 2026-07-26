@@ -31,18 +31,22 @@ export function detectAnomalies(
   const z = opts.zThreshold ?? 2.5;
   const metric = opts.metric ?? 'aqi_composite';
 
-  if (readings.length < window + 5) return [];
+  // A device only fills the channels it physically has, so the requested metric
+  // may be NULL on some rows. Those are not zeros — they are absences, and
+  // feeding them to a z-score would manufacture an anomaly at every gap.
+  const measured = readings.filter((r) => r[metric] != null);
+  if (measured.length < window + 5) return [];
 
   const flagged: Flagged[] = [];
-  for (let i = window; i < readings.length; i++) {
-    const win = readings.slice(i - window, i).map((r) => r[metric]);
+  for (let i = window; i < measured.length; i++) {
+    const win = measured.slice(i - window, i).map((r) => r[metric] as number);
     const m = mean(win);
     const s = std(win);
     if (s < 1e-3) continue;
-    const value = readings[i]![metric];
+    const value = measured[i]![metric] as number;
     const zScore = (value - m) / s;
     if (Math.abs(zScore) > z) {
-      flagged.push({ ts: readings[i]!.ts, value, z: Math.abs(zScore) });
+      flagged.push({ ts: measured[i]!.ts, value, z: Math.abs(zScore) });
     }
   }
 

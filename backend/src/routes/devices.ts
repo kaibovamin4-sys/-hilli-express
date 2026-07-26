@@ -44,10 +44,25 @@ export const deviceRoutes: FastifyPluginAsync = async (app) => {
     const raws = getRecentRaw(p.id, sinceIso);
     if (raws.length < 5) return reply.code(422).send({ error: 'not_enough_samples' });
 
-    const r0_mq2 = calibrateR0(raws.map((r) => r.mq2_adc), device.vcc_mv, device.rl_ohm, 'mq2');
-    const r0_mq4 = calibrateR0(raws.map((r) => r.mq4_adc), device.vcc_mv, device.rl_ohm, 'mq4');
-    const r0_mq8 = calibrateR0(raws.map((r) => r.mq8_adc), device.vcc_mv, device.rl_ohm, 'mq8');
-    updateR0(p.id, r0_mq2, r0_mq4, r0_mq8);
-    return { device_id: p.id, r0_mq2, r0_mq4, r0_mq8, samples: raws.length };
+    // Calibrate only the channels this device actually reports. Feeding an
+    // absent channel's NULLs into calibrateR0 would fix its baseline against
+    // nothing and then silently distort every later PPM reading.
+    const calibrate = (
+      pick: (r: (typeof raws)[number]) => number | null,
+      kind: 'mq2' | 'mq4' | 'mq8' | 'mq135',
+      current: number,
+    ): number => {
+      const samples = raws.map(pick).filter((v): v is number => v != null);
+      if (samples.length < 5) return current;
+      return calibrateR0(samples, device.vcc_mv, device.rl_ohm, kind);
+    };
+
+    const r0_mq2 = calibrate((r) => r.mq2_adc, 'mq2', device.r0_mq2);
+    const r0_mq4 = calibrate((r) => r.mq4_adc, 'mq4', device.r0_mq4);
+    const r0_mq8 = calibrate((r) => r.mq8_adc, 'mq8', device.r0_mq8);
+    const r0_mq135 = calibrate((r) => r.mq135_adc, 'mq135', device.r0_mq135);
+
+    updateR0(p.id, { r0_mq2, r0_mq4, r0_mq8, r0_mq135 });
+    return { device_id: p.id, sensor_kind: device.sensor_kind, r0_mq2, r0_mq4, r0_mq8, r0_mq135, samples: raws.length };
   });
 };

@@ -13,6 +13,13 @@
 //   MQ-2 (LPG-equivalent):   a=574.25,  b=-2.222   (Rs/R0 in clean air ≈ 9.83)
 //   MQ-4 (CH4):              a=1012.7,  b=-2.786   (Rs/R0 in clean air ≈ 4.40)
 //   MQ-8 (H2):               a=976.97,  b=-0.688   (Rs/R0 in clean air ≈ 70.0)
+//   MQ-135 (CO2-equivalent): a=110.47,  b=-2.862   (Rs/R0 in clean air ≈ 3.6)
+//
+// MQ-135 is read as a CO2 equivalent, which is the usual way to turn this
+// element into a single number. It is not a CO2 meter: the sensor responds to
+// the whole mix of combustion products, which is exactly why it suits Almaty's
+// winter air (stove heating plus exhaust) — but the value it yields is an
+// indicator of that mix, not a laboratory concentration.
 //
 // R0 is calibrated per device in clean air and stored in devices.r0_*.
 
@@ -22,9 +29,27 @@ export const MQ_COEFFS: Record<SensorKind, { a: number; b: number; cleanAirRatio
   mq2: { a: 574.25, b: -2.222, cleanAirRatio: 9.83 },
   mq4: { a: 1012.7, b: -2.786, cleanAirRatio: 4.4 },
   mq8: { a: 976.97, b: -0.688, cleanAirRatio: 70.0 },
+  // cleanAirRatio here is not the datasheet's bare Rs/R0 figure but the ratio
+  // that makes the curve above return the ~400 ppm of ordinary outdoor air:
+  //   (400 / a)^(1/b) = 0.638
+  // Using the commonly quoted 3.6 instead would put clean air at ~3 ppm, and
+  // since calibrateR0() derives R0 by dividing by this constant, every later
+  // reading would come out ~140x too low — the station would report perfect air
+  // right up until it was genuinely dangerous.
+  mq135: { a: 110.47, b: -2.862, cleanAirRatio: 0.638 },
 };
 
 export const ADC_MAX = 1023;
+
+/**
+ * Starting R0 for an MQ-135 that has not been calibrated yet.
+ *
+ * A typical element with RL = 10 kΩ sits around Rs ≈ 25 kΩ in clean air, and
+ * R0 = Rs / cleanAirRatio, so ≈40 kΩ puts a fresh station near the correct
+ * 400 ppm baseline instead of reading a flat zero until someone runs the
+ * calibration command. It is a starting point, not a substitute for it.
+ */
+export const DEFAULT_R0_MQ135 = 40_000;
 
 export function adcToVoltage(adc: number, vccMv: number): number {
   const clamped = Math.max(1, Math.min(ADC_MAX - 1, adc));

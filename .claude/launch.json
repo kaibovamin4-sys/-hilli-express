@@ -6,7 +6,14 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173,
-      "cwd": "C:/Users/gnino/AppData/Local/Temp/claude/C--Users-gnino/6102aef0-cb48-40b8-bfc1-f5da09f20f23/scratchpad/hilli/aua-almaty"
+      "cwd": "C:/Users/Георгий/Desktop/AUA/-hilli-express-main"
+    },
+    {
+      "name": "aua-backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 8080,
+      "cwd": "C:/Users/Георгий/Desktop/AUA/-hilli-express-main/backend"
     }
   ]
 }

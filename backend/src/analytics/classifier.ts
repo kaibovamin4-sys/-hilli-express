@@ -47,18 +47,28 @@ export interface ClassifyInput {
 }
 
 export function classify(input: ClassifyInput): Classification {
-  if (input.recent.length < 3 || input.baseline.length < 10) {
+  // Keep only rows carrying all three elements — see trioRows().
+  const recent = trioRows(input.recent);
+  const baseline = trioRows(input.baseline);
+
+  if (recent.length < 3 || baseline.length < 10) {
     return {
       kind: 'normal', label: 'Штатно', confidence: 0.5,
       ratios: { mq2: 1, mq4: 1, mq8: 1 },
-      hint: 'Недостаточно данных для классификации.',
+      hint:
+        input.recent.length >= 3
+          // Distinguish "no data yet" from "this station structurally cannot be
+          // classified": an MQ-135 post will never satisfy this method, and
+          // reporting that as a data gap would send someone hunting a fault.
+          ? 'Классификация источника требует связки MQ2/MQ4/MQ8 — на этой станции только MQ-135.'
+          : 'Недостаточно данных для классификации.',
       runner_up: null,
       slope_ppm_per_min: { mq2: 0, mq4: 0, mq8: 0 },
     };
   }
 
-  const recentMean = meanOf(input.recent);
-  const baseMean = meanOf(input.baseline);
+  const recentMean = meanOf(recent);
+  const baseMean = meanOf(baseline);
   const ratios = {
     mq2: safeRatio(recentMean.mq2, baseMean.mq2),
     mq4: safeRatio(recentMean.mq4, baseMean.mq4),
@@ -72,7 +82,7 @@ export function classify(input: ClassifyInput): Classification {
       ratios,
       hint: 'Все датчики близки к базовой линии.',
       runner_up: null,
-      slope_ppm_per_min: slope(input.recent),
+      slope_ppm_per_min: slope(recent),
     };
   }
 
@@ -88,7 +98,7 @@ export function classify(input: ClassifyInput): Classification {
   // Inversion is time-shape rather than ratio-shape: detect slow steady rise
   // over the pre-event baseline. Slope is measured on BASELINE only so an
   // acute recent spike doesn't get mislabelled as inversion.
-  const shape = slope(input.baseline);
+  const shape = slope(baseline);
   const modest = shape.mq2 < 3 && shape.mq4 < 3 && shape.mq8 < 3;
   const slow =
     maxGrowth < 1.8 &&
@@ -121,7 +131,21 @@ export function classify(input: ClassifyInput): Classification {
   };
 }
 
-function meanOf(rows: ProcessedReading[]): { mq2: number; mq4: number; mq8: number } {
+// The whole method rests on the ratio *between* three elements, so a station
+// that carries only one of them cannot be fingerprinted at all. Rows missing a
+// channel are dropped rather than zero-filled: a zero would read as "this gas
+// is absent", which is a different and much stronger claim than "not measured".
+function trioRows(rows: ProcessedReading[]): Array<Required<Pick<ProcessedReading, 'ts'>> & {
+  mq2_ppm: number; mq4_ppm: number; mq8_ppm: number;
+}> {
+  return rows
+    .filter((r) => r.mq2_ppm != null && r.mq4_ppm != null && r.mq8_ppm != null)
+    .map((r) => ({ ts: r.ts, mq2_ppm: r.mq2_ppm!, mq4_ppm: r.mq4_ppm!, mq8_ppm: r.mq8_ppm! }));
+}
+
+type TrioRow = ReturnType<typeof trioRows>[number];
+
+function meanOf(rows: TrioRow[]): { mq2: number; mq4: number; mq8: number } {
   const n = rows.length;
   if (n === 0) return { mq2: 0, mq4: 0, mq8: 0 };
   let a = 0, b = 0, c = 0;
@@ -144,7 +168,7 @@ function cosine(a: number[], b: number[]): number {
   return Math.max(0, Math.min(1, s));
 }
 
-function slope(rows: ProcessedReading[]): { mq2: number; mq4: number; mq8: number } {
+function slope(rows: TrioRow[]): { mq2: number; mq4: number; mq8: number } {
   if (rows.length < 2) return { mq2: 0, mq4: 0, mq8: 0 };
   const t0 = new Date(rows[0]!.ts).getTime();
   const points = rows.map((r) => ({ x: (new Date(r.ts).getTime() - t0) / 60_000, r }));

@@ -1,4 +1,9 @@
-export type SensorKind = 'mq2' | 'mq4' | 'mq8';
+// Every gas element the firmware can carry. MQ-135 is the element on the
+// station we actually build; the MQ2/MQ4/MQ8 trio is the development fleet.
+export type SensorKind = 'mq2' | 'mq4' | 'mq8' | 'mq135';
+
+/** Which set of gas channels a device populates. */
+export type DeviceSensorKind = 'mq135' | 'mq_trio';
 
 export type StatusLevel = 'good' | 'moderate' | 'bad';
 
@@ -10,9 +15,12 @@ export interface Device {
   lat: number;
   lng: number;
   district: string | null;
+  sensor_kind: DeviceSensorKind;
+  is_demo: number;
   r0_mq2: number;
   r0_mq4: number;
   r0_mq8: number;
+  r0_mq135: number;
   vcc_mv: number;
   rl_ohm: number;
   firmware: string | null;
@@ -24,9 +32,11 @@ export interface Device {
 export interface RawReading {
   device_id: string;
   ts: string;
-  mq2_adc: number;
-  mq4_adc: number;
-  mq8_adc: number;
+  // Null on every channel the device does not physically have.
+  mq2_adc: number | null;
+  mq4_adc: number | null;
+  mq8_adc: number | null;
+  mq135_adc: number | null;
   temp_c: number | null;
   humidity: number | null;
   vcc_mv: number | null;
@@ -35,9 +45,10 @@ export interface RawReading {
 export interface ProcessedReading {
   device_id: string;
   ts: string;
-  mq2_ppm: number;
-  mq4_ppm: number;
-  mq8_ppm: number;
+  mq2_ppm: number | null;
+  mq4_ppm: number | null;
+  mq8_ppm: number | null;
+  mq135_ppm: number | null;
   aqi_composite: number;
   status: StatusLevel;
   quality_flag: QualityFlag;

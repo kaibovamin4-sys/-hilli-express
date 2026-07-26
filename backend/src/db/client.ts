@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { config } from '../config.js';
+import { migrate } from './migrations.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -24,6 +25,8 @@ export function getDb(): DB {
   const schema = readFileSync(resolve(__dirname, 'schema.sql'), 'utf8');
   db.exec(schema);
   _db = db;
+  // After schema.sql, because migrations inspect the tables it just ensured.
+  migrate(db);
   return db;
 }
 

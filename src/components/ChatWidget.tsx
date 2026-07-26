@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { api, type District } from '../lib/api';
+import { api, type Point } from '../lib/api';
 
 interface ChatWidgetProps {
-  district: District | null;
+  /** Where to answer about. Any labelled point — a district, or the user's own address. */
+  place: (Point & { label: string }) | null;
 }
 
 interface Msg {
@@ -21,7 +22,7 @@ const START_SUGGESTIONS = [
   'Нужна ли маска?',
 ];
 
-export default function ChatWidget({ district }: ChatWidgetProps) {
+export default function ChatWidget({ place }: ChatWidgetProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   const [suggestions, setSuggestions] = useState<string[]>(START_SUGGESTIONS);
@@ -35,12 +36,12 @@ export default function ChatWidget({ district }: ChatWidgetProps) {
 
   const send = async (text: string) => {
     const msg = text.trim();
-    if (!msg || busy || !district) return;
+    if (!msg || busy || !place) return;
     setMessages((m) => [...m, { role: 'user', text: msg }]);
     setInput('');
     setBusy(true);
     try {
-      const r = await api.chat(msg, district);
+      const r = await api.chat(msg, place);
       setMessages((m) => [...m, { role: 'bot', text: r.reply }]);
       setSuggestions(r.suggestions);
     } catch {
@@ -50,9 +51,19 @@ export default function ChatWidget({ district }: ChatWidgetProps) {
     }
   };
 
-  // Позиция — инлайн-стилями: fixed-элементы не должны зависеть от порядка
-  // CSS-слоёв или чужих stacking-контекстов.
+  // position/right/zIndex are inline because fixed elements shouldn't depend
+  // on CSS layer order or a foreign stacking context. `bottom` is the one
+  // property that has to differ between mobile and desktop — the mobile tab
+  // bar (AppNav) occupies the bottom ~60px there and nothing does on desktop —
+  // and inline styles always beat a class regardless of breakpoint, so it has
+  // to live in className instead or the responsive override could never win.
   const anchor: CSSProperties = { position: 'fixed', right: 20, zIndex: 9000 };
+  // Match the tab bar's own content height (~61px) plus a gap, and add the same
+  // safe-area inset the tab bar pads itself with — so the button clears it on
+  // every device, notch or not, without the two having to coordinate.
+  const BUTTON_BOTTOM_MOBILE = 'bottom-[calc(76px+env(safe-area-inset-bottom,0px))]';
+  // Stacked above the button: its own mobile offset + button height + a gap.
+  const PANEL_BOTTOM_MOBILE = 'bottom-[calc(140px+env(safe-area-inset-bottom,0px))]';
 
   return (
     <>
@@ -61,18 +72,17 @@ export default function ChatWidget({ district }: ChatWidgetProps) {
         type="button"
         aria-label="Открыть эко-ассистента"
         onClick={() => setOpen((o) => !o)}
-        style={{ ...anchor, bottom: 20 }}
-        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-black text-xl md:text-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center"
+        style={anchor}
+        className={`${BUTTON_BOTTOM_MOBILE} md:bottom-5 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white text-black text-xl md:text-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center`}
       >
         {open ? '×' : '💬'}
       </button>
 
       {open && (
         <div
-          className="liquid-glass rounded-2xl flex flex-col overflow-hidden"
+          className={`${PANEL_BOTTOM_MOBILE} md:bottom-[88px] liquid-glass rounded-2xl flex flex-col overflow-hidden`}
           style={{
             ...anchor,
-            bottom: 88,
             width: 'min(380px, calc(100vw - 40px))',
             height: 'min(520px, 70vh)',
           }}
@@ -81,7 +91,7 @@ export default function ChatWidget({ district }: ChatWidgetProps) {
             <span className="w-2 h-2 rounded-full" style={{ background: 'var(--status-c, var(--good))' }} />
             <div>
               <div className="text-[14px] font-medium text-white leading-tight">Эко-ассистент</div>
-              <div className="text-[11.5px] text-[color:var(--muted)]">отвечает по живым данным · {district?.name ?? '…'} район</div>
+              <div className="text-[11.5px] text-[color:var(--muted)]">отвечает по живым данным · {place?.label ?? '…'}</div>
             </div>
           </div>
 

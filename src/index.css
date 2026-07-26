@@ -71,6 +71,71 @@ body {
   pointer-events: none;
 }
 
+/* ── Hero glass ──────────────────────────────────────────────────────────
+   Two tiers of the Bloom-style liquid glass, scoped to the hero.
+
+   Deliberately NOT named .liquid-glass: that class already exists above and
+   every screen in the app is built on it. Redefining it here would restyle the
+   whole product, and the hero is the only surface meant to change.
+
+   The tiers differ only in how much they hide what's behind them: the light
+   tier is a membrane over the video, the strong tier is an opaque-feeling
+   panel you can set text on. Both draw their border with a masked ::before
+   gradient rather than `border`, so the edge can fade along its length —
+   bright at top and bottom, invisible through the middle — which is what
+   makes the panel read as a curved pane of glass instead of a flat rectangle. */
+@layer components {
+  .hero-glass,
+  .hero-glass-strong {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    border: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-glass {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .hero-glass-strong {
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .hero-glass::before,
+  .hero-glass-strong::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    /* The mask keeps only the padding ring, turning the gradient into a border. */
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .hero-glass::before {
+    background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 20%,
+      transparent 40%, transparent 60%,
+      rgba(255, 255, 255, 0.15) 80%, rgba(255, 255, 255, 0.45) 100%);
+  }
+
+  .hero-glass-strong::before {
+    background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.2) 20%,
+      transparent 40%, transparent 60%,
+      rgba(255, 255, 255, 0.2) 80%, rgba(255, 255, 255, 0.5) 100%);
+  }
+}
+
 /* атмосферный фон */
 .haze {
   position: fixed;

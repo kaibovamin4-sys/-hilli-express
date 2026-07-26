@@ -9,6 +9,7 @@
 
 import type { Device, RawReading, ProcessedReading, SensorKind } from '../types.js';
 import { MQ_COEFFS } from '../processing/calibration.js';
+import { humidityFromDewPoint } from '../processing/climate.js';
 import { processReading } from '../processing/pipeline.js';
 import {
   insertRaw, insertProcessed, listDevices, touchDeviceSeen, insertRawBatch, insertProcessedBatch,
@@ -115,7 +116,9 @@ export function injectAnomaly(deviceId: string, kind: AnomalyKind, now = Date.no
   s.anomaly = { kind, endsAt: now + ANOMALY_DURATION_MS[kind], peakMul: 1 };
 }
 
-function anomalyMul(s: DeviceState, kind: SensorKind, nowMs: number): number {
+type TrioKind = 'mq2' | 'mq4' | 'mq8';
+
+function anomalyMul(s: DeviceState, kind: TrioKind, nowMs: number): number {
   const a = s.anomaly;
   if (!a || nowMs > a.endsAt) return 1;
   const total = ANOMALY_DURATION_MS[a.kind];
@@ -125,6 +128,59 @@ function anomalyMul(s: DeviceState, kind: SensorKind, nowMs: number): number {
   const shape = Math.sin(t * Math.PI);
   const target = ANOMALY_MULTIPLIER[a.kind][kind];
   return 1 + (target - 1) * shape;
+}
+
+// DHT22 (temperature + humidity)
+//
+// Modelled rather than randomised because these values are now shown to the
+// user as a station reading and feed the forecast model as features — a curve
+// that ignores time of day would teach the model that temperature is noise.
+//
+// Three layers: Almaty's seasonal mean, a diurnal swing peaking mid-afternoon,
+// and an altitude correction (the city climbs ~1100 m from the northern plain
+// to the mountain stations, and the standard 6.5 °C/km lapse rate is the whole
+// reason Медеу reads several degrees cooler than Турксиб).
+//
+// Humidity is derived from a slowly varying dew point instead of being drawn
+// independently: in reality the water content of the air barely moves over a
+// day while RH swings widely as the temperature does, and only this way round
+// does the pair stay physically consistent.
+
+const CITY_LAT_NORTH = 43.34;
+const CITY_LAT_SOUTH = 43.16;
+const ELEVATION_NORTH_M = 600;
+const ELEVATION_SOUTH_M = 1700;
+const LAPSE_RATE_C_PER_M = 6.5 / 1000;
+
+function elevationOf(lat: number): number {
+  const t = (CITY_LAT_NORTH - lat) / (CITY_LAT_NORTH - CITY_LAT_SOUTH);
+  return ELEVATION_NORTH_M + Math.max(0, Math.min(1, t)) * (ELEVATION_SOUTH_M - ELEVATION_NORTH_M);
+}
+
+function dayOfYear(d: Date): number {
+  const start = Date.UTC(d.getFullYear(), 0, 0);
+  return (Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - start) / 86_400_000;
+}
+
+function mockDht22(
+  device: Device,
+  at: Date,
+  hour: number,
+  rand: () => number,
+): { temp: number; rh: number } {
+  // Peak around 15 July (day 196), trough in mid-January.
+  const seasonal = 11 + 13 * Math.cos((2 * Math.PI * (dayOfYear(at) - 196)) / 365);
+  // Zero at 09:00, maximum at 15:00, minimum just before sunrise.
+  const diurnal = 7 * Math.sin((2 * Math.PI * (hour - 9)) / 24);
+  const altitude = (elevationOf(device.lat) - ELEVATION_NORTH_M) * LAPSE_RATE_C_PER_M;
+
+  const temp = seasonal + diurnal - altitude + (rand() - 0.5) * 1.2;
+  // Summer air here is markedly drier; the gap between mean temperature and
+  // dew point widens with the season.
+  const dew = seasonal - (6 + 4 * Math.max(0, Math.cos((2 * Math.PI * (dayOfYear(at) - 196)) / 365)));
+  const rh = humidityFromDewPoint(temp, Math.min(temp - 0.5, dew + (rand() - 0.5) * 1.5));
+
+  return { temp: Math.round(temp * 10) / 10, rh: Math.round(rh) };
 }
 
 // Emit one reading
@@ -157,9 +213,7 @@ export function generateOne(device: Device, at: Date = new Date()): { raw: RawRe
     mq8: Math.max(10, s.ou.mq8 * anomalyMul(s, 'mq8', nowMs)),
   };
 
-  // Weather stub — real T/RH come from weather; mock uses seasonal defaults.
-  const temp = 15 + 15 * Math.sin(((at.getMonth() + 3) / 12) * 2 * Math.PI) + (s.rand() - 0.5) * 2;
-  const rh = 50 + 20 * Math.cos(((at.getMonth() + 3) / 12) * 2 * Math.PI) + (s.rand() - 0.5) * 5;
+  const { temp, rh } = mockDht22(device, at, hour, s.rand);
 
   const mq2_adc = ppmToAdc(target.mq2, device.r0_mq2, device.vcc_mv, device.rl_ohm, 'mq2');
   const mq4_adc = ppmToAdc(target.mq4, device.r0_mq4, device.vcc_mv, device.rl_ohm, 'mq4');
@@ -169,6 +223,9 @@ export function generateOne(device: Device, at: Date = new Date()): { raw: RawRe
     device_id: device.id,
     ts: at.toISOString(),
     mq2_adc, mq4_adc, mq8_adc,
+    // This generator only simulates the MQ2/MQ4/MQ8 development fleet; the
+    // MQ-135 station is a real device and its readings arrive over MQTT.
+    mq135_adc: null,
     temp_c: Math.round(temp * 10) / 10,
     humidity: Math.round(rh),
     vcc_mv: device.vcc_mv,
@@ -181,10 +238,15 @@ export function generateOne(device: Device, at: Date = new Date()): { raw: RawRe
 // Worker loop (mock only)
 let timer: NodeJS.Timeout | null = null;
 
+/** Simulated devices only — never overwrite a real station's history. */
+function mockableDevices(): Device[] {
+  return listDevices(true).filter((d) => d.is_demo === 1 && d.sensor_kind === 'mq_trio');
+}
+
 export function startMockLoop(intervalMs: number): void {
   if (timer) return;
   const tick = () => {
-    const devs = listDevices(true);
+    const devs = mockableDevices();
     const now = new Date();
     for (const d of devs) {
       const { raw, processed } = generateOne(d, now);
@@ -204,7 +266,7 @@ export function stopMockLoop(): void {
 
 // History seed
 export function seedHistory(days: number): { insertedRaw: number; insertedProc: number } {
-  const devs = listDevices(true);
+  const devs = mockableDevices();
   const now = new Date();
   const stepMs = 5 * 60_000;
   const start = new Date(now.getTime() - days * 24 * 60 * 60_000);

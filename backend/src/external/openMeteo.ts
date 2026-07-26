@@ -142,6 +142,78 @@ export async function getAirQuality(lat: number, lng: number): Promise<AirQualit
   });
 }
 
+// Hourly series spanning the recent past *and* the near future, in one call.
+//
+// The ML forecaster needs both halves from the same source: the past half
+// becomes training features aligned with our own sensor history, the future
+// half becomes the "known future covariate" the model conditions on. Fetching
+// them separately (archive API + forecast API) would splice two different
+// model runs together and put a discontinuity right at t=now, which the tree
+// would happily learn as a real signal.
+
+export interface HourlySeries {
+  time: string[]; // local ISO, no timezone suffix — Open-Meteo `timezone=auto`
+  values: Record<string, Array<number | null>>;
+  utcOffsetSeconds: number;
+}
+
+const SERIES_TTL_MS = 20 * 60 * 1000;
+const PAST_DAYS = 7;
+
+function toSeries(j: any, fields: string[]): HourlySeries {
+  const values: Record<string, Array<number | null>> = {};
+  for (const f of fields) {
+    values[f] = (j.hourly?.[f] ?? []).map((v: unknown) => coerce(v));
+  }
+  return {
+    time: j.hourly?.time ?? [],
+    values,
+    utcOffsetSeconds: Number(j.utc_offset_seconds ?? 0),
+  };
+}
+
+const AIR_SERIES_FIELDS = ['pm2_5', 'pm10', 'ozone', 'nitrogen_dioxide', 'dust'];
+
+export async function getAirQualitySeries(lat: number, lng: number): Promise<HourlySeries> {
+  const key = `air-series:${roundKey(lat, lng)}`;
+  return cached(key, SERIES_TTL_MS, async () => {
+    const j = await fetchJson(AIR_URL, {
+      latitude: lat,
+      longitude: lng,
+      hourly: AIR_SERIES_FIELDS.join(','),
+      timezone: 'auto',
+      past_days: PAST_DAYS,
+      forecast_days: 2,
+    });
+    return toSeries(j, AIR_SERIES_FIELDS);
+  });
+}
+
+const WEATHER_SERIES_FIELDS = [
+  'temperature_2m',
+  'relative_humidity_2m',
+  'wind_speed_10m',
+  'wind_direction_10m',
+  'surface_pressure',
+  'precipitation',
+  'cloud_cover',
+];
+
+export async function getWeatherSeries(lat: number, lng: number): Promise<HourlySeries> {
+  const key = `weather-series:${roundKey(lat, lng)}`;
+  return cached(key, SERIES_TTL_MS, async () => {
+    const j = await fetchJson(WEATHER_URL, {
+      latitude: lat,
+      longitude: lng,
+      hourly: WEATHER_SERIES_FIELDS.join(','),
+      timezone: 'auto',
+      past_days: PAST_DAYS,
+      forecast_days: 2,
+    });
+    return toSeries(j, WEATHER_SERIES_FIELDS);
+  });
+}
+
 function coerce(v: unknown): number | null {
   if (v == null) return null;
   const n = Number(v);

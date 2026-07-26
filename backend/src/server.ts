@@ -9,12 +9,13 @@ import rateLimit from '@fastify/rate-limit';
 import { config } from './config.js';
 import { getDb, closeDb } from './db/client.js';
 import { listDevices, listDistricts } from './db/repositories.js';
-import { seedIfEmpty } from './db/seedData.js';
+import { ensureMq135Device, reconcileDeviceFlags, seedIfEmpty } from './db/seedData.js';
 import { startMockLoop } from './mock/generator.js';
 import { startTrafficPoller } from './external/tomtom.js';
 import { loadSecretsFromEnv } from './auth/hmac.js';
 import { scanAllDevices } from './services/anomalyScan.js';
 import { startMq135MqttSubscriber, stopMq135MqttSubscriber } from './services/mq135Mqtt.js';
+import { startReferenceCollector, stopReferenceCollector } from './services/referenceCollector.js';
 
 import { statusRoutes } from './routes/status.js';
 import { ingestRoutes } from './routes/ingest.js';
@@ -31,14 +32,27 @@ import { cityRoutes } from './routes/city.js';
 import { chatRoutes } from './routes/chat.js';
 import { placesRoutes } from './routes/places.js';
 import { airRoutes } from './routes/air.js';
+import { mlRoutes } from './routes/ml.js';
+import { stationRoutes } from './routes/stations.js';
+import { dashboardRoutes } from './routes/dashboard.js';
+import { networkRoutes } from './routes/network.js';
+import { accuracyRoutes } from './routes/accuracy.js';
+import { trainModels } from './ml/service.js';
 
 const ANOMALY_SCAN_INTERVAL_MS = 5 * 60_000;
 const ANOMALY_SCAN_WINDOW_H = 3;
+// The forecast model is cheap to fit (seconds) but its inputs only move hourly,
+// so half-hourly retraining keeps it fresh without burning cycles.
+const ML_RETRAIN_INTERVAL_MS = 30 * 60_000;
 
 async function bootstrap(): Promise<void> {
   getDb();
   loadSecretsFromEnv();
   seedIfEmpty();
+  // Outside seedIfEmpty: the real station must exist on every boot, including
+  // on a database that already has the demo fleet in it.
+  ensureMq135Device();
+  reconcileDeviceFlags();
 
   const app = Fastify({
     logger: { level: config.logLevel },
@@ -71,7 +85,7 @@ async function bootstrap(): Promise<void> {
     statusRoutes, ingestRoutes, readingsRoutes, deviceRoutes, coverageRoutes,
     forecastRoutes, anomaliesRoutes, recommendationsRoutes, compareRoutes,
     analyticsRoutes, cityRoutes, chatRoutes, placesRoutes,
-    airRoutes,
+    airRoutes, mlRoutes, stationRoutes, dashboardRoutes, networkRoutes, accuracyRoutes,
   ]) {
     await app.register(routes);
   }
@@ -82,11 +96,23 @@ async function bootstrap(): Promise<void> {
 
   startTrafficPoller(app.log);
   startMq135MqttSubscriber(app.log);
+  startReferenceCollector(app.log);
 
   if (config.useMock) {
     startMockLoop(config.mockIntervalMs);
     console.log(`[mock] generator started, interval ${config.mockIntervalMs}ms`);
   }
+
+  // Fire-and-forget so a slow Open-Meteo response can't hold up the listen();
+  // until it resolves /api/forecast/ml serves the Holt fallback.
+  void trainModels().then((m) => {
+    console.log(
+      m
+        ? `[ml] forecast model trained on ${m.train_rows} rows from ${m.stations} stations`
+        : '[ml] forecast model unavailable, falling back to Holt blend',
+    );
+  });
+  const retrainInterval = setInterval(() => void trainModels(), ML_RETRAIN_INTERVAL_MS);
 
   const scanInterval = setInterval(() => {
     try {
@@ -99,6 +125,8 @@ async function bootstrap(): Promise<void> {
 
   const shutdown = async () => {
     clearInterval(scanInterval);
+    clearInterval(retrainInterval);
+    stopReferenceCollector();
     await stopMq135MqttSubscriber();
     await app.close();
     closeDb();
