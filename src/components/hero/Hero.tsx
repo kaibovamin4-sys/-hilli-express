@@ -103,7 +103,18 @@ export default function Hero() {
     // lived in the desktop-only right panel, so a mobile visitor had to scroll
     // past the hero and a whole panel to reach them. The hero is now 52vh on
     // small screens and carries those two numbers itself.
-    <section className="relative full-bleed min-h-[56vh] md:min-h-[70vh] lg:min-h-[calc(100vh-5rem)] overflow-hidden">
+    //
+    // md:-mt-[92px] pulls the section up to the true top of the page at
+    // desktop widths. AppNav's <header> is `sticky` and reserves 84px in
+    // flow (measured: pt-5 pb-2 around the nav pill), plus <main>'s own 8px
+    // top padding — 92px of page that was just dark background above the
+    // video, since <header> itself has no fill; only the nav pill inside it
+    // does. Pulling Hero up that far means the video now paints in the
+    // padding around the pill too, and the pill's own `liquid-glass--solid`
+    // background keeps the tab labels readable regardless. Not applied below
+    // md: the header doesn't exist there (it's `hidden md:block`), so there
+    // is no gap to cancel and no video-under-nav effect to create.
+    <section className="relative full-bleed md:-mt-[92px] min-h-[56vh] md:min-h-[70vh] lg:min-h-[calc(100vh-5rem)] overflow-hidden">
       {/* Video sits at z-0, everything else floats above it. */}
       {/* WebM first: VP9 is ~25% smaller than the H.264 at the same quality, and
           browsers pick the first source they can decode. The MP4 is the fallback
