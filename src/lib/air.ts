@@ -35,8 +35,10 @@ export function isBlind(p: GeoPoint, posts: GeoPoint[]): boolean {
   return posts.every((post) => distanceKm(p, post) > BLIND_KM);
 }
 
-export const pmColor = (pm: number): string =>
-  pm < 35 ? '#4ade80' : pm < 75 ? '#fbbf24' : '#f87171';
+// The PM2.5 colour ramp used to live here too, with a third set of thresholds
+// (35/75) that disagreed with both of the others. It is gone: bands and colours
+// now come from `charts/primitives` only, so there is exactly one place where a
+// number becomes a colour. See `pmBand` / `aqiBand` there.
 
 export interface StatusCopy {
   key: StatusKey;

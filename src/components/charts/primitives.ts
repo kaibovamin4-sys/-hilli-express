@@ -77,22 +77,79 @@ export function areaPath(points: Pt[], baselineY: number): string {
   )},${baselineY.toFixed(2)} Z`;
 }
 
-// The colour ramp used everywhere a value is shown as a colour. Thresholds are
-// the WHO PM2.5 bands the rest of the app already speaks in, mapped through our
-// composite scale so a chart and a map pin never disagree.
+// ── Bands ────────────────────────────────────────────────────────────────
+// One vocabulary for "how bad is this", shared by every screen.
+//
+// The app shows two different quantities — PM2.5 in ug/m3 and the AQI
+// composite — and it used to colour them with two independent ramps that
+// happened to use the same three colours. A district could legitimately be
+// amber on the map (PM ramp) and green in the forecast (AQI ramp) at the same
+// moment, with nothing on screen to explain why. Now both quantities are
+// mapped to the same three named bands first, and the colour, the label and
+// the shape all come from the band. Whatever the metric, one band means one
+// thing.
+//
+// Thresholds:
+//   PM2.5  15 / 35 ug/m3 — WHO 24h guideline, and roughly 2x it.
+//   AQI    100 / 200     — the composite's own moderate/unhealthy breakpoints.
+
+export type Band = 'good' | 'mid' | 'bad';
+
+export const PM_GOOD = 15;
+export const PM_BAD = 35;
 export const AQI_GOOD = 100;
 export const AQI_BAD = 200;
 
+export function pmBand(pm: number): Band {
+  if (pm >= PM_BAD) return 'bad';
+  if (pm >= PM_GOOD) return 'mid';
+  return 'good';
+}
+
+export function aqiBand(aqi: number): Band {
+  if (aqi >= AQI_BAD) return 'bad';
+  if (aqi >= AQI_GOOD) return 'mid';
+  return 'good';
+}
+
+export const BAND_COLOR: Record<Band, string> = {
+  good: 'var(--good)',
+  mid: 'var(--mid)',
+  bad: 'var(--bad)',
+};
+
+/** Always rendered next to the colour, never instead of it. */
+export const BAND_LABEL: Record<Band, string> = {
+  good: 'чисто',
+  mid: 'средне',
+  bad: 'плохо',
+};
+
+/** Threshold text for legends, so a colour is never shown without its scale. */
+export const BAND_RANGE: Record<'pm' | 'aqi', Record<Band, string>> = {
+  pm: {
+    good: `до ${PM_GOOD}`,
+    mid: `${PM_GOOD}\u2013${PM_BAD}`,
+    bad: `${PM_BAD}+`,
+  },
+  aqi: {
+    good: `до ${AQI_GOOD}`,
+    mid: `${AQI_GOOD}\u2013${AQI_BAD}`,
+    bad: `${AQI_BAD}+`,
+  },
+};
+
+export const METRIC_LABEL: Record<'pm' | 'aqi', string> = {
+  pm: 'PM2.5, \u00b5g/m\u00b3',
+  aqi: 'AQI-композит',
+};
+
 export function aqiColor(aqi: number): string {
-  if (aqi >= AQI_BAD) return 'var(--bad)';
-  if (aqi >= AQI_GOOD) return 'var(--mid)';
-  return 'var(--good)';
+  return BAND_COLOR[aqiBand(aqi)];
 }
 
 export function pmColorVar(pm: number): string {
-  if (pm >= 35) return 'var(--bad)';
-  if (pm >= 15) return 'var(--mid)';
-  return 'var(--good)';
+  return BAND_COLOR[pmBand(pm)];
 }
 
 /** Local time-of-day label, e.g. `14:00`. */
