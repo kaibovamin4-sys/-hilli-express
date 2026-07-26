@@ -105,16 +105,21 @@ export default function Hero() {
     // small screens and carries those two numbers itself.
     //
     // md:-mt-[92px] pulls the section up to the true top of the page at
-    // desktop widths. AppNav's <header> is `sticky` and reserves 84px in
-    // flow (measured: pt-5 pb-2 around the nav pill), plus <main>'s own 8px
-    // top padding — 92px of page that was just dark background above the
-    // video, since <header> itself has no fill; only the nav pill inside it
-    // does. Pulling Hero up that far means the video now paints in the
-    // padding around the pill too, and the pill's own `liquid-glass--solid`
-    // background keeps the tab labels readable regardless. Not applied below
-    // md: the header doesn't exist there (it's `hidden md:block`), so there
-    // is no gap to cancel and no video-under-nav effect to create.
-    <section className="relative full-bleed md:-mt-[92px] min-h-[56vh] md:min-h-[70vh] lg:min-h-[calc(100vh-5rem)] overflow-hidden">
+    // desktop widths, so the video (which fills the section) paints behind
+    // AppNav's transparent <header> instead of leaving 92px of plain dark
+    // background above it (84px the sticky header reserves in flow, plus
+    // <main>'s own 8px top padding — measured).
+    //
+    // That first attempt pulled the *content* up along with the video: the
+    // left panel's glass card started at the section's new top edge too, so
+    // its rounded border landed right under the nav pill instead of below
+    // it. Fix: grow the section's min-height by the same 92px it moved up
+    // (so its bottom edge — and everything on the page after it — stays
+    // exactly where it was), and give the content row `md:pt-[92px]` to sit
+    // back down at its original spot inside that taller box. Only the video
+    // and its scrim layers, which are `absolute inset-0` and fill the whole
+    // section, actually reach up under the nav.
+    <section className="relative full-bleed md:-mt-[92px] min-h-[56vh] md:min-h-[calc(70vh+92px)] lg:min-h-[calc(100vh-5rem+92px)] overflow-hidden">
       {/* Video sits at z-0, everything else floats above it. */}
       {/* WebM first: VP9 is ~25% smaller than the H.264 at the same quality, and
           browsers pick the first source they can decode. The MP4 is the fallback
@@ -163,7 +168,7 @@ export default function Hero() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 flex min-h-[56vh] md:min-h-[70vh] lg:min-h-[calc(100vh-5rem)]">
+      <div className="relative z-10 flex min-h-[56vh] md:min-h-[calc(70vh+92px)] md:pt-[92px] lg:min-h-[calc(100vh-5rem+92px)]">
         {/* ── Left panel ─────────────────────────────────────────────── */}
         <div className="relative w-full lg:w-[52%]">
           <div className="absolute inset-4 lg:inset-6 rounded-3xl hero-glass-strong" />
